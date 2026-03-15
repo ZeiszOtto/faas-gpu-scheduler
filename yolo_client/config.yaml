@@ -1,0 +1,15 @@
+services:
+  face_detect: "http://PLACEHOLDER/face-detect"
+  plate_detect: "http://PLACEHOLDER/plate-detect"
+
+video:
+  source: "input.mp4"
+  frame_skip: 2
+
+yolo:
+  model: "yolov8n.pt"
+  confidence_threshold: 0.5
+  device: "cuda"
+
+logging:
+  output: "results.log"
