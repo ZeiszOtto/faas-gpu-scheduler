@@ -1,3 +1,5 @@
+mode: "save"  # "save" = mappába ment, "http" = Knative service-nek küld
+
 services:
   face_detect: "http://PLACEHOLDER/face-detect"
   plate_detect: "http://PLACEHOLDER/plate-detect"
@@ -13,3 +15,6 @@ yolo:
 
 logging:
   output: "results.log"
+
+output:
+  save_dir: "crops"

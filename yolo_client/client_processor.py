@@ -61,8 +61,21 @@ def extract_crop(frame, box) -> bytes:
 
 
 # Function to send the cropped image to the target
-def dispatch(url: str,        image_bytes: bytes,   logger: logging.Logger,
-             cls_name: str,   confidence: float,    frame_idx: int):
+def dispatch(url: str,       image_bytes: bytes,  logger: logging.Logger,
+             cls_name: str,  confidence: float,   frame_idx: int,
+             mode: str,      save_dir: str = "crops"):
+
+    if mode == "save":
+        Path(save_dir).mkdir(parents=True, exist_ok=True)
+        filename = f"{save_dir}/{frame_idx}_{cls_name}_{confidence:.2f}.jpg"
+        with open(filename, "wb") as f:
+            f.write(image_bytes)
+        logger.info(
+            f"frame={frame_idx} class={cls_name} conf={confidence:.2f} "
+            f"saved={filename}"
+        )
+        return
+
     send_ts = datetime.now(timezone.utc).isoformat()
     try:
         t0 = time.perf_counter()
@@ -73,7 +86,6 @@ def dispatch(url: str,        image_bytes: bytes,   logger: logging.Logger,
             timeout=10,
         )
         latency_ms = (time.perf_counter() - t0) * 1000
-
         logger.info(
             f"frame={frame_idx} class={cls_name} conf={confidence:.2f} "
             f"sent_at={send_ts} target={url} "
@@ -89,6 +101,8 @@ def dispatch(url: str,        image_bytes: bytes,   logger: logging.Logger,
 
 # YOLO detection logic
 def run(config_path: str = "config.yaml"):
+    mode     = cfg["mode"]
+    save_dir = cfg["output"]["save_dir"]
     cfg    = load_config(config_path)
     logger = setup_logger(cfg["logging"]["output"])
 
@@ -122,11 +136,11 @@ def run(config_path: str = "config.yaml"):
 
                 if cls_id == PERSON_CLASS:
                     crop = extract_crop(frame, box)
-                    dispatch(face_url, crop, logger, "person", confidence, frame_idx)
+                    dispatch(face_url, crop, logger, "person", confidence, frame_idx, mode, save_dir)
 
                 elif cls_id in CAR_CLASSES:
                     crop = extract_crop(frame, box)
-                    dispatch(plate_url, crop, logger, "vehicle", confidence, frame_idx)
+                    dispatch(plate_url, crop, logger, "vehicle", confidence, frame_idx, mode, save_dir)
 
     finally:
         capture.release()
