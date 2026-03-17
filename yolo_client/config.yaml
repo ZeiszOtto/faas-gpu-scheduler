@@ -5,8 +5,15 @@ services:
   plate_detect: "http://PLACEHOLDER/plate-detect"
 
 video:
-  source: "input.mp4"
-  frame_skip: 2
+  source: "C:\\Users\\fragm\\OneDrive\\Desktop\\inputs\\street.jpg"
+  frame_skip: 1
+
+filtering:
+  min_person_height: 250   # pixel, ennél kisebb személyt kihagyjuk
+  min_vehicle_width: 350   # pixel, ennél kisebb járművet kihagyjuk
+
+tracking:
+  cooldown_frames: 30
 
 yolo:
   model: "yolov8n.pt"

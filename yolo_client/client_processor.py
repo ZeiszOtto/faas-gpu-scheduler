@@ -8,11 +8,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from ultralytics import YOLO
 
+CONFIG = "config.yaml"
 PERSON_CLASS = 0
 CAR_CLASSES  = {2, 3, 5, 7}  # car, motorcycle, bus, truck
 
 # Loading of configuration file (Uses config.yaml unless specified otherwise)
-def load_config(path: str = "config.yaml") -> dict:
+def load_config(path: str = CONFIG) -> dict:
     with open(path, "r") as conf:
         return yaml.safe_load(conf)
 
@@ -56,7 +57,7 @@ def extract_crop(frame, box) -> bytes:
     x2, y2 = min(frame.shape[1], x2), min(frame.shape[0], y2)
 
     crop = frame[y1:y2, x1:x2]
-    _, encoded = cv2.imencode(".jpg", crop)
+    _, encoded = cv2.imencode(".jpg", crop, [cv2.IMWRITE_JPEG_QUALITY, 95])
     return encoded.tobytes()
 
 
@@ -99,12 +100,15 @@ def dispatch(url: str,       image_bytes: bytes,  logger: logging.Logger,
         )
 
 
-# YOLO detection logic
+# ----- YOLO detection logic
 def run(config_path: str = "config.yaml"):
+    # ----- Config and logger initialization
+    cfg      = load_config(config_path)
     mode     = cfg["mode"]
-    save_dir = cfg["output"]["save_dir"]
-    cfg    = load_config(config_path)
-    logger = setup_logger(cfg["logging"]["output"])
+    run_ts   = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    save_dir = f"{cfg['output']['save_dir']}_{run_ts}"
+    log_file = f"results_{run_ts}.log"
+    logger   = setup_logger(log_file)
 
     face_url  = cfg["services"]["face_detect"]
     plate_url = cfg["services"]["plate_detect"]
@@ -114,7 +118,12 @@ def run(config_path: str = "config.yaml"):
     device      = cfg["yolo"]["device"]
     frame_skip  = cfg["video"]["frame_skip"]
 
-    capture = open_video(cfg["video"]["source"], logger)
+    min_person_height = cfg["filtering"]["min_person_height"]
+    min_vehicle_width = cfg["filtering"]["min_vehicle_width"]
+
+    # ----- Capture and processing loop
+    capture   = open_video(cfg["video"]["source"], logger)
+    last_sent = {}
     logger.info(f"Starting pipeline — source={cfg['video']['source']} model={cfg['yolo']['model']} device={device}")
 
     frame_idx = 0
@@ -125,14 +134,33 @@ def run(config_path: str = "config.yaml"):
                 break
 
             frame_idx += 1
+
+            results = model.track(frame, conf=conf_thresh, device=device, verbose=False, persist=True, iou=0.3)
+
+            if results[0].boxes.id is None:
+                continue
+            
             if frame_idx % frame_skip != 0:
                 continue
 
-            results = model(frame, conf=conf_thresh, device=device, verbose=False)
-
             for box in results[0].boxes:
+                track_id   = int(box.id[0])
                 cls_id     = int(box.cls[0])
                 confidence = float(box.conf[0])
+
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                width  = x2 - x1
+                height = y2 - y1
+
+                if cls_id == PERSON_CLASS and height < min_person_height:
+                    continue
+
+                if cls_id in CAR_CLASSES and width < min_vehicle_width:
+                    continue
+
+                if track_id in last_sent and frame_idx - last_sent[track_id] < cfg["tracking"]["cooldown_frames"]:
+                    continue
+                last_sent[track_id] = frame_idx
 
                 if cls_id == PERSON_CLASS:
                     crop = extract_crop(frame, box)
@@ -145,7 +173,6 @@ def run(config_path: str = "config.yaml"):
     finally:
         capture.release()
         logger.info(f"Pipeline finished — processed {frame_idx} frames")
-
 
 
 if __name__ == "__main__":
