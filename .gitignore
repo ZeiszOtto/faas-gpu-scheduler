@@ -1,1 +1,15 @@
-yolo_client/yolov8n.pt
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Model weights
+*.h5
+*.pt
+*.pth
+
+# Logs
+*.log
+crops_*
