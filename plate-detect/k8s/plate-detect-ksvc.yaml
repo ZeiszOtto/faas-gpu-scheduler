@@ -1,0 +1,15 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: plate-detect
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+        - image: zeiszotto/plate-detect:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              nvidia.com/gpu: "1"

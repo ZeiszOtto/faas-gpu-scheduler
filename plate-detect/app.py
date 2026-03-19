@@ -22,7 +22,6 @@ async def detect(request: Request):
     if not results:
         return JSONResponse({"plate_detected": False, "plate_text": "", "confidence": 0.0})
 
-    # Legjobb confidence-ű találat
     best = max(results, key=lambda r: r[2])
     confidence = float(best[2])
     text = best[1].strip()
@@ -30,5 +29,5 @@ async def detect(request: Request):
     return JSONResponse({
         "plate_detected": confidence > 0.3,
         "plate_text": text,
-        "confidence": confidence
+        "confidence": round(confidence, 4)
     })
