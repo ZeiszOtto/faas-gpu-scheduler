@@ -1,11 +1,11 @@
 mode: "save"  # "save" = mappába ment, "http" = Knative service-nek küld
 
 services:
-  face_detect: "http://PLACEHOLDER/face-detect"
-  plate_detect: "http://PLACEHOLDER/plate-detect"
+  face_detect: "http://face-detect.default.192-168-1-200.sslip.io/detect"
+  plate_detect: "http://plate-detect.default.192-168-1-200.sslip.io/detect"
 
 video:
-  source: "C:\\Users\\fragm\\OneDrive\\Desktop\\inputs\\street.jpg"
+  source: "C:\\Users\\fragm\\Desktop\\inputs\\input.mp4"
   frame_skip: 1
 
 filtering:
@@ -18,7 +18,7 @@ tracking:
 yolo:
   model: "yolov8n.pt"
   confidence_threshold: 0.5
-  device: "cuda"
+  device: "cpu"
 
 logging:
   output: "results.log"
