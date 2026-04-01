@@ -16,6 +16,9 @@ type Config struct {
 	GPUUtilWeight   float64
 	VRAMWeight      float64
 	TargetNamespace string
+	GPUDatabasePath string
+	ScoringPreset   string
+	TensorScoring   bool
 }
 
 // LoadConfig returns ...
@@ -26,6 +29,9 @@ func LoadConfig() *Config {
 		Port:            getEnv("PORT", "8443"),
 		PrometheusURL:   getEnv("PROMETHEUS_URL", "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"),
 		TargetNamespace: getEnv("TARGET_NAMESPACE", "default"),
+		GPUDatabasePath: getEnv("GPU_DATABASE_PATH", "/tmp/gpu-database"),
+		ScoringPreset:   getEnv("SCORE_PRESET", "inference"),
+		//TensorScoring: 	 getEnv("TENSOR_STATUS", ),
 	}
 
 	// MetricWindow: string -> time.Duration conversion
