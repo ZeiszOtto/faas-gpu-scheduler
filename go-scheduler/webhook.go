@@ -20,7 +20,7 @@ type PatchOperation struct {
 }
 
 // handleMutate ...
-func handleMutate(cfg *Config) http.HandlerFunc {
+func handleMutate(cfg *Config, gpuDB *GPUDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Read incoming HTTP Request
 		body, err := io.ReadAll(r.Body)
@@ -71,7 +71,7 @@ func handleMutate(cfg *Config) http.HandlerFunc {
 		}
 
 		// Node selection
-		selectedNode, err := selectNode(cfg)
+		selectedNode, err := selectNode(cfg, gpuDB)
 		if err != nil {
 			log.Printf("[ERROR] Unsuccessful node selection: %s — pod allowed without patching", err)
 			sendResponse(w, req.UID, true, "Node selection error [fallback]", nil)
@@ -168,10 +168,4 @@ func sendResponse(w http.ResponseWriter, uid interface{}, allowed bool, message 
 	if _, err := w.Write(responseBytes); err != nil {
 		log.Printf("[ERROR] Failed to write response: %s", err)
 	}
-}
-
-// selectNode ...
-func selectNode(cfg *Config) (string, error) {
-	log.Printf("[STUB] SelectNode called — temporary: rtx-master")
-	return "rtx-master", nil
 }

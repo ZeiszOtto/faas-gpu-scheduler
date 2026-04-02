@@ -15,6 +15,7 @@ import (
 type NodeMetric struct {
 	GPUUtilization float64
 	VRAMFree       float64
+	GPUModel       string
 }
 
 // prometheusResponse contains the outer section of the Prometheus API response that contains
@@ -80,14 +81,19 @@ func QueryGPUMetrics(cfg *Config) (map[string]NodeMetric, error) {
 			log.Printf("[ERROR] An error occurred during extracting VRAM metrics: %v", err)
 			continue
 		}
-		entry := metrics[hostname] // entry = NodeMetrics{GPUUtil: 45.2, VRAMFree: 0.0}
-		entry.VRAMFree = value     // entry = NodeMetrics{GPUUtil: 45.2, VRAMFree: 6144.0}
-		metrics[hostname] = entry  // metrics = {"rtx-master": NodeMetrics{GPUUtil: 45.2, VRAMFree: 6144.0}}
+		entry := metrics[hostname]
+		entry.VRAMFree = value
+
+		if modelName, exists := result.Metric["model"]; exists {
+			entry.GPUModel = modelName
+		}
+
+		metrics[hostname] = entry
 	}
 
 	// Logging gathered metrics
 	for node, m := range metrics {
-		log.Printf("[METRICS] %s: GPU=%.1f%% VRAM_FREE=%.0f MB", node, m.GPUUtilization, m.VRAMFree)
+		log.Printf("[METRICS] %s: GPU=%.1f%% VRAM_FREE=%.0f MB MODEL=%s", node, m.GPUUtilization, m.VRAMFree, m.GPUModel)
 	}
 
 	if len(metrics) == 0 {

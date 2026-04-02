@@ -178,7 +178,7 @@ def normalize_gpu_specs(gpu_dict: dict) -> dict:
 def build_output_json(gpu_dict: dict) -> dict:
     return {
         "metadata": {
-            "timezone": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "source":       "dbgpu v2025.12 (https://github.com/painebenjamin/dbgpu)",
             "gpu_count":    len(gpu_dict),
         },

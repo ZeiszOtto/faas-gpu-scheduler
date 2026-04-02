@@ -8,17 +8,16 @@ import (
 )
 
 type Config struct {
-	TLSCertFile     string
-	TLSKeyFile      string
-	Port            string
-	PrometheusURL   string
-	MetricWindow    time.Duration
-	GPUUtilWeight   float64
-	VRAMWeight      float64
-	TargetNamespace string
-	GPUDatabasePath string
-	ScoringPreset   string
-	TensorScoring   bool
+	TLSCertFile      string
+	TLSKeyFile       string
+	Port             string
+	PrometheusURL    string
+	MetricWindow     time.Duration
+	TargetNamespace  string
+	GPUDatabasePath  string
+	ScoringPreset    string
+	TensorScoring    bool
+	CapabilityWeight float64
 }
 
 // LoadConfig returns ...
@@ -29,9 +28,8 @@ func LoadConfig() *Config {
 		Port:            getEnv("PORT", "8443"),
 		PrometheusURL:   getEnv("PROMETHEUS_URL", "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"),
 		TargetNamespace: getEnv("TARGET_NAMESPACE", "default"),
-		GPUDatabasePath: getEnv("GPU_DATABASE_PATH", "/tmp/gpu-database"),
+		GPUDatabasePath: getEnv("GPU_DATABASE_PATH", "tc/webhook/gpu_database.json"),
 		ScoringPreset:   getEnv("SCORE_PRESET", "inference"),
-		//TensorScoring: 	 getEnv("TENSOR_STATUS", ),
 	}
 
 	// MetricWindow: string -> time.Duration conversion
@@ -42,30 +40,27 @@ func LoadConfig() *Config {
 	}
 	cfg.MetricWindow = window
 
-	// GPUUtilWeight: string -> float64 conversion
-	gpuWeightStr := getEnv("GPU_WEIGHT", "0.6")
-	gpuWeight, err := strconv.ParseFloat(gpuWeightStr, 64)
+	// TensorScoring type conversion
+	tensorStr := getEnv("TENSOR_SCORING", "true")
+	tensorScoring, err := strconv.ParseBool(tensorStr)
 	if err != nil {
-		log.Fatalf("Invalid value for GPU_WEIGHT: %q", gpuWeightStr)
+		log.Fatalf("Invalid value for TENSOR_SCORING: %q", tensorStr)
 	}
-	cfg.GPUUtilWeight = gpuWeight
+	cfg.TensorScoring = tensorScoring
 
-	// VRAMWeight: string -> float64 conversion
-	vramWeightStr := getEnv("VRAM_WEIGHT", "0.4")
-	vramWeight, err := strconv.ParseFloat(vramWeightStr, 64)
+	// CapabilityWeight: string -> float64 conversion
+	capWeightStr := getEnv("CAPABILITY_WEIGHT", "0.2")
+	capWeight, err := strconv.ParseFloat(capWeightStr, 64)
 	if err != nil {
-		log.Fatalf("Invalid value for VRAM_WEIGHT: %q", vramWeightStr)
+		log.Fatalf("Invalid value for CAPABILITY_WEIGHT: %q", capWeightStr)
 	}
-	cfg.VRAMWeight = vramWeight
-
-	// Weight validation
-	sum := gpuWeight + vramWeight
-	if sum < 0.99 || sum > 1.01 {
-		log.Fatalf("Weight is %.2f, but it needs to be 1.00", sum)
+	if capWeight < 0.0 || capWeight > 1.0 {
+		log.Fatalf("CAPABILITY_WEIGHT must be between 0.0 and 1.0, got: %.2f", capWeight)
 	}
+	cfg.CapabilityWeight = capWeight
 
-	log.Printf("Configuration loaded: port=%s, prometheus=%s, window=%s, gpuWeight=%.2f, vramWeight=%.2f",
-		cfg.Port, cfg.PrometheusURL, cfg.MetricWindow, cfg.GPUUtilWeight, cfg.VRAMWeight)
+	log.Printf("[INFO] Configuration loaded: port=%s, prometheus=%s, window=%s",
+		cfg.Port, cfg.PrometheusURL, cfg.MetricWindow)
 
 	return cfg
 }
