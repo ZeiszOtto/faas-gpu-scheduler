@@ -60,7 +60,7 @@ func computeDynamicScore(metric NodeMetric, totalVRAM float64) float64 {
 
 	var vramRatio float64
 	if totalVRAM > 0 {
-		vramRatio = metric.VRAMFree / 100.0
+		vramRatio = metric.VRAMFree / totalVRAM
 	}
 
 	idleRatio = clamp(idleRatio, 0.0, 1.0)
@@ -70,21 +70,21 @@ func computeDynamicScore(metric NodeMetric, totalVRAM float64) float64 {
 }
 
 func matchGPUName(dcgmName string, gpuDB *GPUDatabase) (string, bool) {
-	if dcgmName != "" {
+	if dcgmName == "" {
 		return "", false
 	}
 
-	stippedName := strings.TrimPrefix(dcgmName, "NVIDIA")
+	strippedName := strings.TrimPrefix(dcgmName, "NVIDIA ")
 
 	// Try exact matching
-	if _, exists := gpuDB.GPUs[stippedName]; exists {
-		return stippedName, true
+	if _, exists := gpuDB.GPUs[strippedName]; exists {
+		return strippedName, true
 	}
 
 	// Fallback to prefix matching
 	var matches []string
 	for dbName := range gpuDB.GPUs {
-		if strings.HasPrefix(dbName, stippedName) {
+		if strings.HasPrefix(dbName, strippedName) {
 			matches = append(matches, dbName)
 		}
 	}
@@ -96,7 +96,7 @@ func matchGPUName(dcgmName string, gpuDB *GPUDatabase) (string, bool) {
 		return matches[0], true
 	default:
 		best := matches[0]
-		for _, m := range matches[:1] {
+		for _, m := range matches[1:] {
 			if len(m) > len(best) {
 				best = m
 			}

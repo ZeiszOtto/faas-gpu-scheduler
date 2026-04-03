@@ -74,7 +74,7 @@ func (db *GPUDatabase) ValidatePreset(presetName string) error {
 		for name := range db.ScoringPresets {
 			available = append(available, name)
 		}
-		return fmt.Errorf("scoring preset %q not found in GPU database)", presetName)
+		return fmt.Errorf("scoring preset %q not found in GPU database", presetName)
 	}
 	return nil
 }

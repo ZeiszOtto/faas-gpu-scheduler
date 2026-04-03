@@ -34,17 +34,17 @@ func main() {
 
 	// Goroutine of HTTPS server
 	go func() {
+		log.Printf("[INFO] HTTPS server listening on port %s", cfg.Port)
 		if err := server.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("[ERROR] Unable to initiate HTTPS server on port %s: %v", cfg.Port, err)
 		}
-		log.Printf("[INFO] HTTPS server listening on port %s", cfg.Port)
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	sig := <-quit
 
-	log.Printf("[INFO] Recieved signal %v - initiating shutdown...", sig)
+	log.Printf("[INFO] Received signal %v - initiating shutdown...", sig)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

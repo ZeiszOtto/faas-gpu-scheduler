@@ -47,7 +47,7 @@ func QueryGPUMetrics(cfg *Config) (map[string]NodeMetric, error) {
 	window := fmt.Sprintf("%ds", int(cfg.MetricWindow.Seconds()))
 
 	// Creating the PromQL queries with avg_over_time to avoid momentary GPU spikes poisoning the query
-	queryUtil := fmt.Sprintf("avg_over_time(DCGM_FI_DEV_GPU_UTIL[%s]", window)
+	queryUtil := fmt.Sprintf("avg_over_time(DCGM_FI_DEV_GPU_UTIL[%s])", window)
 	queryVRAM := fmt.Sprintf("avg_over_time(DCGM_FI_DEV_FB_FREE[%s])", window)
 
 	// Querying
@@ -72,7 +72,12 @@ func QueryGPUMetrics(cfg *Config) (map[string]NodeMetric, error) {
 		}
 		entry := metrics[hostname]   // entry = NodeMetrics{GPUUtil: 0.0, VRAMFree: 0.0}
 		entry.GPUUtilization = value // entry = NodeMetrics{GPUUtil: 45.2, VRAMFree: 0.0}
-		metrics[hostname] = entry    // metrics = {"rtx-master": NodeMetrics{GPUUtil: 45.2, VRAMFree: 0.0}}
+
+		if modelName, exists := result.Metric["model"]; exists {
+			entry.GPUModel = modelName
+		}
+
+		metrics[hostname] = entry // metrics = {"rtx-master": NodeMetrics{GPUUtil: 45.2, VRAMFree: 0.0}}
 	}
 
 	for _, result := range vramResults {
@@ -83,11 +88,6 @@ func QueryGPUMetrics(cfg *Config) (map[string]NodeMetric, error) {
 		}
 		entry := metrics[hostname]
 		entry.VRAMFree = value
-
-		if modelName, exists := result.Metric["model"]; exists {
-			entry.GPUModel = modelName
-		}
-
 		metrics[hostname] = entry
 	}
 

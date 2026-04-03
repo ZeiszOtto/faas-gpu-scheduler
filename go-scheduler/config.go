@@ -23,12 +23,12 @@ type Config struct {
 // LoadConfig returns ...
 func LoadConfig() *Config {
 	cfg := &Config{
-		TLSCertFile:     getEnv("TLS_CERT_FILE", "etc/webhook/tls/tls.crt"),
-		TLSKeyFile:      getEnv("TLS_KEY_FILE", "etc/webhooko/tls/tls.key"),
+		TLSCertFile:     getEnv("TLS_CERT_FILE", "/etc/webhook/tls/tls.crt"),
+		TLSKeyFile:      getEnv("TLS_KEY_FILE", "/etc/webhook/tls/tls.key"),
 		Port:            getEnv("PORT", "8443"),
 		PrometheusURL:   getEnv("PROMETHEUS_URL", "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"),
 		TargetNamespace: getEnv("TARGET_NAMESPACE", "default"),
-		GPUDatabasePath: getEnv("GPU_DATABASE_PATH", "tc/webhook/gpu_database.json"),
+		GPUDatabasePath: getEnv("GPU_DATABASE_PATH", "/etc/webhook/gpu_database.json"),
 		ScoringPreset:   getEnv("SCORE_PRESET", "inference"),
 	}
 
