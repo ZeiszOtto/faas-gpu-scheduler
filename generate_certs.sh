@@ -7,6 +7,7 @@ SERVICE_NAME="gpu-scheduler-webhook"
 NAMESPACE="gpu-scheduler"
 SECRET_NAME="gpu-scheduler-tls"
 CERT_DIR="./certs"
+WEBHOOK_CONFIG="${WEBHOOK_CONFIG:-$(pwd)/scheduler-config.yaml}"
 
 mkdir -p "${CERT_DIR}"
 cd "${CERT_DIR}"
@@ -72,11 +73,18 @@ kubectl create secret tls "${SECRET_NAME}" \
     --namespace="${NAMESPACE}" \
     --dry-run=client -o yaml | kubectl apply -f -
 
-# Print the CA bundle for the webhook configuration
+# Inject the CA bundle into the MutatingWebhookConfiguration manifest if possible
 echo ""
-echo "[INFO] CA bundle (base64) — copy this into the MutatingWebhookConfiguration caBundle field:"
-echo ""
-CA_BUNDLE=$(base64 -w 0 ca.crt)
-echo "${CA_BUNDLE}"
+if [ -f "${WEBHOOK_CONFIG}" ]; then
+    echo "[INFO] Injecting CA bundle into ${WEBHOOK_CONFIG}..."
+    sed -i.bak "s|caBundle: .*|caBundle: ${CA_BUNDLE}|" "${WEBHOOK_CONFIG}"
+    rm -f "${WEBHOOK_CONFIG}.bak"
+    echo "[INFO] CA bundle successfully written to ${WEBHOOK_CONFIG}"
+else
+    echo "[WARNING] ${WEBHOOK_CONFIG} not found — printing CA bundle for manual paste:"
+    echo ""
+    echo "${CA_BUNDLE}"
+fi
+
 echo ""
 echo "[INFO] Done. Certificate files are in ${CERT_DIR}/"
