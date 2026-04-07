@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gpu-scheduler-config
+  namespace: gpu-scheduler
+  labels:
+    app: gpu-scheduler
+data:
+  # Prometheus endpoint that exposes DCGM metrics
+  PROMETHEUS_URL: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
+
+  # Time window for avg_over_time smoothing in PromQL queries
+  METRIC_WINDOW: "30s"
+
+  # Namespace the webhook operates on (must match the MutatingWebhookConfiguration namespaceSelector)
+  TARGET_NAMESPACE: "default"
+
+  # Scoring preset key from gpu_database.json: inference | balanced | training
+  SCORE_PRESET: "inference"
+
+  # Whether the tensor core metric contributes to the static capability score
+  TENSOR_SCORING: "true"
+
+  # Weight of the static GPU capability score in the final score
+  # Must be in the [0.0, 1.0] range
+  CAPABILITY_WEIGHT: "0.2"

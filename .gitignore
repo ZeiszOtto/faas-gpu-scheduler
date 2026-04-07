@@ -5,6 +5,9 @@ __pycache__/
 *.pyo
 *.pyd
 
+# Executables
+*.exe
+
 # Model weights
 *.h5
 *.pt

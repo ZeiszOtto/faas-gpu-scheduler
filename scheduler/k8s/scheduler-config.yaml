@@ -1,0 +1,33 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: gpu-scheduler-webhook
+webhooks:
+  - name: webhook.gpu-scheduler.local
+    # The Service forwards traffic to the scheduler pod on port 8443
+    clientConfig:
+      service:
+        name: gpu-scheduler-webhook
+        namespace: gpu-scheduler
+        path: /mutate
+        port: 443
+      caBundle: CA_PLACEHOLDER
+    # Match every Pod CREATE operation
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        scope: "Namespaced"
+    # Restrict the webhook to the specified namespace at the API Server level
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: default
+    # Reject pod creation if the webhook is unreachable
+    failurePolicy: Fail
+    # The webhook only modifies the pod spec via JSON Patch
+    sideEffects: None
+    # AdmissionReview API version supported by this webhook
+    admissionReviewVersions: ["v1"]
+    # Waiting time for API response
+    timeoutSeconds: 5

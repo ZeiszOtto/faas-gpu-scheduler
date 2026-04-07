@@ -20,7 +20,7 @@ def load_config(path: str = CONFIG) -> dict:
 
 # Setup of logger
 def setup_logger(output: str) -> logging.Logger:
-    logger = logging.getLogger("yolo_client")
+    logger = logging.getLogger("client")
     logger.setLevel(logging.INFO)
     fmt = logging.Formatter("%(asctime)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
 

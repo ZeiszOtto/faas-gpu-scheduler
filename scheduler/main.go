@@ -23,7 +23,12 @@ func main() {
 		log.Fatalf("[ERROR] Invalid scoring configuration: %v", err)
 	}
 
-	http.HandleFunc("/mutate", handleMutate(cfg, gpuDB))
+	nodeGPUMap, err := BuildNodeGPUMap(cfg, gpuDB)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to build node-to-GPU mapping: %v", err)
+	}
+
+	http.HandleFunc("/mutate", handleMutate(cfg, gpuDB, nodeGPUMap))
 
 	server := &http.Server{
 		Addr:         ":" + cfg.Port,

@@ -73,7 +73,7 @@ func QueryGPUMetrics(cfg *Config) (map[string]NodeMetric, error) {
 		entry := metrics[hostname]   // entry = NodeMetrics{GPUUtil: 0.0, VRAMFree: 0.0}
 		entry.GPUUtilization = value // entry = NodeMetrics{GPUUtil: 45.2, VRAMFree: 0.0}
 
-		if modelName, exists := result.Metric["model"]; exists {
+		if modelName, exists := result.Metric["modelName"]; exists {
 			entry.GPUModel = modelName
 		}
 
@@ -144,6 +144,48 @@ func queryPrometheus(prometheusURL string, query string) ([]prometheusResult, er
 	}
 
 	return promResponse.Data.Result, nil
+}
+
+// BuildNodeGPUMap queries DCGM metrics once at startup to build a mapping of
+// node hostnames to GPU database model names.
+func BuildNodeGPUMap(cfg *Config, gpuDB *GPUDatabase) (map[string]string, error) {
+	// Query total VRAM per node: free + used = constant regardless of load
+	query := "DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED"
+	results, err := queryPrometheus(cfg.PrometheusURL, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query VRAM for GPU model resolution: %w", err)
+	}
+
+	nodeGPUMap := make(map[string]string)
+
+	for _, result := range results {
+		hostname, totalVRAM, err := extractHostnameAndValue(result)
+		if err != nil {
+			log.Printf("[ERROR] Failed to extract VRAM data: %v", err)
+			continue
+		}
+
+		modelName, exists := result.Metric["modelName"]
+		if !exists {
+			log.Printf("[WARNING] No modelName label found for node %s", hostname)
+			continue
+		}
+
+		dbName, found := matchGPUName(modelName, gpuDB, totalVRAM)
+		if !found {
+			log.Printf("[WARNING] No GPU database match for %q on node %s", modelName, hostname)
+			continue
+		}
+
+		nodeGPUMap[hostname] = dbName
+		log.Printf("[GPUMAP] %s → %s (DCGM: %q, totalVRAM: %.0f MB)", hostname, dbName, modelName, totalVRAM)
+	}
+
+	if len(nodeGPUMap) == 0 {
+		return nil, fmt.Errorf("no GPU models could be resolved from DCGM metrics")
+	}
+
+	return nodeGPUMap, nil
 }
 
 // extractHostnameAndValue extracts the hostname of the node and the requested value from the prometheusResponse

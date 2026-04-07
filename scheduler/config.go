@@ -20,7 +20,8 @@ type Config struct {
 	CapabilityWeight float64
 }
 
-// LoadConfig returns ...
+// LoadConfig reads all configuration from environment variables, performs type conversions and validation,
+// and returns a fully populated Config pointer. Called once at startup from main(). Configuration errors are fatal.
 func LoadConfig() *Config {
 	cfg := &Config{
 		TLSCertFile:     getEnv("TLS_CERT_FILE", "/etc/webhook/tls/tls.crt"),

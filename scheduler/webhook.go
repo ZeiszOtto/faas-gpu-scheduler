@@ -20,7 +20,7 @@ type PatchOperation struct {
 }
 
 // handleMutate ...
-func handleMutate(cfg *Config, gpuDB *GPUDatabase) http.HandlerFunc {
+func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Read incoming HTTP Request
 		body, err := io.ReadAll(r.Body)
@@ -71,7 +71,7 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase) http.HandlerFunc {
 		}
 
 		// Node selection
-		selectedNode, err := selectNode(cfg, gpuDB)
+		selectedNode, err := selectNode(cfg, gpuDB, nodeGPUMap)
 		if err != nil {
 			log.Printf("[ERROR] Unsuccessful node selection: %s — pod allowed without patching", err)
 			sendResponse(w, req.UID, true, "Node selection error [fallback]", nil)

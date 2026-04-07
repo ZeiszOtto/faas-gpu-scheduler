@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-scheduler-webhook
+  namespace: gpu-scheduler
+  labels:
+    app: gpu-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpu-scheduler
+  template:
+    metadata:
+      name: gpu-scheduler
+      labels:
+        app: gpu-scheduler
+    spec:
+      serviceAccountName: gpu-scheduler-account
+      # Pins the webhook to the control plane node
+      nodeSelector:
+        kubernetes.io/hostname: rtx-master
+      # Tolerate the control plane taint so the pod can actually schedule
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: webhook
+          image: zeiszotto/scheduler:latest
+          imagePullPolicy: Always
+          ports:
+            - name: webhook
+              containerPort: 8443
+              protocol: TCP
+          # Inject every key from the scalar ConfigMap as an environment variable
+          envFrom:
+            - configMapRef:
+                name: gpu-scheduler-config
+          # TLS cert & key expected by the webhook
+          volumeMounts:
+            - name: webhook-tls
+              mountPath: /etc/webhook/tls
+              readOnly: true
+      volumes:
+        - name: webhook-tls
+          secret:
+            secretName: gpu-scheduler-tls
+      restartPolicy: Always
+      
