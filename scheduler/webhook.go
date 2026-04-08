@@ -19,7 +19,9 @@ type PatchOperation struct {
 	Value interface{} `json:"value,omitempty"`
 }
 
-// handleMutate ...
+// handleMutate returns the HTTP handler for the /mutate endpoint. The handler validates the AdmissionReview,
+// filters out pods that don't request a GPU or don't belong to the target namespace, runs the GPU-aware node
+// selector, and  returns a JSON Patch that injects a preferred nodeAffinity into the pod spec.
 func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Read incoming HTTP Request
@@ -47,9 +49,6 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			return
 		}
 
-		log.Printf("[INFO] Webhook call: Operation=%s Namespace=%s Name=%s",
-			req.Operation, req.Namespace, req.Name)
-
 		// Pod extraction
 		var pod corev1.Pod
 		if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
@@ -57,6 +56,9 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			sendResponse(w, req.UID, false, "Error parsing pod", nil)
 			return
 		}
+
+		log.Printf("[INFO] Webhook call: Operation=%s Namespace=%s Name=%s",
+			req.Operation, req.Namespace, getPodName(&pod))
 
 		// Pod relevance checking
 		if req.Namespace != cfg.TargetNamespace {
@@ -104,7 +106,8 @@ func requestsGPU(pod *corev1.Pod) bool {
 	return false
 }
 
-// buildNodeAffinityPatch ...
+// buildNodeAffinityPatch constructs a JSON Patch that adds a soft nodeAffinity preference to the pod spec,
+// biasing the kube-scheduler toward the given node without making it a hard constraint.
 func buildNodeAffinityPatch(nodeName string) []PatchOperation {
 	affinity := corev1.Affinity{
 		NodeAffinity: &corev1.NodeAffinity{
@@ -162,6 +165,7 @@ func sendResponse(w http.ResponseWriter, uid interface{}, allowed bool, message 
 	if err != nil {
 		log.Printf("[ERROR] An error occurred during marshalling response: %s", err)
 		http.Error(w, "Error marshalling response", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -147,8 +147,8 @@ func queryPrometheus(prometheusURL string, query string) ([]prometheusResult, er
 	return promResponse.Data.Result, nil
 }
 
-// BuildNodeGPUMap queries DCGM metrics once at startup to build a mapping of
-// node hostnames to GPU database model names.
+// BuildNodeGPUMap queries DCGM metrics once at startup to build a mapping of node hostnames
+// to GPU database model names.
 func BuildNodeGPUMap(cfg *Config, gpuDB *GPUDatabase) (map[string]string, error) {
 	// Query total VRAM per node: free + used = constant regardless of load
 	query := "DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED"

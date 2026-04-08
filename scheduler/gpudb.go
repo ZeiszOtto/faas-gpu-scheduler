@@ -45,6 +45,8 @@ type GPUSpec struct {
 	NormMemoryType float64 `json:"norm_memory_type"`
 }
 
+// LoadGPUDatabase reads and parses the GPU capability database from the given JSON file path,
+// returning a fully populated GPUDatabase pointer.
 func LoadGPUDatabase(path string) (*GPUDatabase, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -68,17 +70,22 @@ func LoadGPUDatabase(path string) (*GPUDatabase, error) {
 	return &db, nil
 }
 
+// ValidatePreset checks whether the given preset name exists in the loaded scoring presets map.
+// Returns nil on success, or an error listing the available preset names.
 func (db *GPUDatabase) ValidatePreset(presetName string) error {
 	if _, exists := db.ScoringPresets[presetName]; !exists {
 		available := make([]string, 0, len(db.ScoringPresets))
 		for name := range db.ScoringPresets {
 			available = append(available, name)
 		}
-		return fmt.Errorf("scoring preset %q not found in GPU database", presetName)
+		return fmt.Errorf("scoring preset %q not found in GPU database (available: %v)", presetName, available)
 	}
 	return nil
 }
 
+// GetGPUScore computes the static capability score for a single GPU model under the given scoring preset.
+// If tensorEnabled is false, the tensor core weight is removed from the formula and the remaining four
+// weights are rescaled proportionally so they still sum to 1.0
 func (db *GPUDatabase) GetGPUScore(modelName string, presetName string, tensorEnabled bool) (float64, error) {
 	// Look up the GPU model in the database
 	gpu, exists := db.GPUs[modelName]
@@ -120,30 +127,4 @@ func (db *GPUDatabase) GetGPUScore(modelName string, presetName string, tensorEn
 		memTypeWeight*gpu.NormMemoryType
 
 	return score, nil
-}
-
-func (db *GPUDatabase) ListAvailableGPUs() []string {
-	names := make([]string, 0, len(db.GPUs))
-	for name := range db.GPUs {
-		names = append(names, name)
-	}
-	return names
-}
-
-func (db *GPUDatabase) LogGPUInfo(modelName string, presetName string, tensorEnabled bool) {
-	gpu, exists := db.GPUs[modelName]
-	if !exists {
-		log.Printf("[ERROR] GPU model %q not found in database", modelName)
-		return
-	}
-
-	score, err := db.GetGPUScore(modelName, presetName, tensorEnabled)
-	if err != nil {
-		log.Printf("[ERROR] Could not compute score for %q: %v", modelName, err)
-		return
-	}
-
-	log.Printf("[INFO/GPUDB] %s: arch=%s, VRAM=%.0fGB, BW=%.0f GB/s, TC=%d, FP32=%.1f TFLOPS → score=%.4f (preset=%s, tensor=%t)",
-		modelName, gpu.Architecture, gpu.MemorySizeGB, gpu.MemoryBandwidthGBs,
-		gpu.TensorCores, gpu.FP32TFLOPS, score, presetName, tensorEnabled)
 }
