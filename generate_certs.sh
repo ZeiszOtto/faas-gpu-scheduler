@@ -77,7 +77,7 @@ kubectl create secret tls "${SECRET_NAME}" \
 echo ""
 if [ -f "${WEBHOOK_CONFIG}" ]; then
     echo "[INFO] Injecting CA bundle into ${WEBHOOK_CONFIG}..."
-    sed -i.bak "s|caBundle: .*|caBundle: ${CA_BUNDLE}|" "${WEBHOOK_CONFIG}"
+    sed -i.bak "s|caBundle:.*|caBundle: ${CA_BUNDLE}|" "${WEBHOOK_CONFIG}"
     rm -f "${WEBHOOK_CONFIG}.bak"
     echo "[INFO] CA bundle successfully written to ${WEBHOOK_CONFIG}"
 else
