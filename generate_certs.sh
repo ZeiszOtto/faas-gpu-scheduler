@@ -74,16 +74,21 @@ kubectl create secret tls "${SECRET_NAME}" \
     --dry-run=client -o yaml | kubectl apply -f -
 
 # Inject the CA bundle into the MutatingWebhookConfiguration manifest if possible
-echo ""
 if [ -f "${WEBHOOK_CONFIG}" ]; then
-    echo "[INFO] Injecting CA bundle into ${WEBHOOK_CONFIG}..."
+    CA_BUNDLE=$(base64 -w 0 ca.crt)
+    if [ -z "${CA_BUNDLE}" ]; then
+        echo "[ERROR] Generated CA bundle is empty — aborting before corrupting the manifest"
+        exit 1
+    fi
+    echo "[INFO] Injecting CA bundle (${#CA_BUNDLE} bytes) into ${WEBHOOK_CONFIG}..."
     sed -i.bak "s|caBundle:.*|caBundle: ${CA_BUNDLE}|" "${WEBHOOK_CONFIG}"
     rm -f "${WEBHOOK_CONFIG}.bak"
     echo "[INFO] CA bundle successfully written to ${WEBHOOK_CONFIG}"
 else
     echo "[WARNING] ${WEBHOOK_CONFIG} not found — printing CA bundle for manual paste:"
     echo ""
-    echo "${CA_BUNDLE}"
+    base64 -w 0 ca.crt
+    echo ""
 fi
 
 echo ""
