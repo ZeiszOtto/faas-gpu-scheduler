@@ -63,7 +63,7 @@ func LoadGPUDatabase(path string) (*GPUDatabase, error) {
 		return nil, fmt.Errorf("no scoring presets found in the database")
 	}
 
-	log.Printf("[INFO] GPU database successfully loaded with %d GPU entries.", len(db.GPUs))
+	log.Printf("[INFO/GPUDB] GPU database successfully loaded with %d GPU entries.", len(db.GPUs))
 
 	return &db, nil
 }
@@ -143,7 +143,7 @@ func (db *GPUDatabase) LogGPUInfo(modelName string, presetName string, tensorEna
 		return
 	}
 
-	log.Printf("[INFO] %s: arch=%s, VRAM=%.0fGB, BW=%.0f GB/s, TC=%d, FP32=%.1f TFLOPS → score=%.4f (preset=%s, tensor=%t)",
+	log.Printf("[INFO/GPUDB] %s: arch=%s, VRAM=%.0fGB, BW=%.0f GB/s, TC=%d, FP32=%.1f TFLOPS → score=%.4f (preset=%s, tensor=%t)",
 		modelName, gpu.Architecture, gpu.MemorySizeGB, gpu.MemoryBandwidthGBs,
 		gpu.TensorCores, gpu.FP32TFLOPS, score, presetName, tensorEnabled)
 }

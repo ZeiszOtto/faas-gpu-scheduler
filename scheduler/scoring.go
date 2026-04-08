@@ -21,7 +21,7 @@ func selectNode(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) (
 	for hostname, metric := range metrics {
 		dbModelName, exists := nodeGPUMap[hostname]
 		if !exists {
-			log.Printf("[WARNING] No GPU model mapping for node %s — skipping", hostname)
+			log.Printf("[ERROR] No GPU model mapping for node %s — skipping", hostname)
 			continue
 		}
 
@@ -39,7 +39,7 @@ func selectNode(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) (
 		capWeight := cfg.CapabilityWeight
 		finalScore := (1-capWeight)*dynamicScore + capWeight*staticScore
 
-		log.Printf("[SCORING] %s: model=%s, dynamic=%.4f, static=%.4f, final=%.4f (capWeight=%.2f)",
+		log.Printf("[INFO/SCORING] %s: model=%s, dynamic=%.4f, static=%.4f, final=%.4f (capWeight=%.2f)",
 			hostname, dbModelName, dynamicScore, staticScore, finalScore, capWeight)
 
 		if finalScore > bestScore {
@@ -52,7 +52,7 @@ func selectNode(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) (
 	if bestNode == "" {
 		return "", fmt.Errorf("no scoreable nodes found: all nodes failed GPU model matching or scoring")
 	}
-	log.Printf("[INFO] Selected node: %s (score=%.4f)", bestNode, bestScore)
+	log.Printf("[INFO/SCORING] Selected node: %s (score=%.4f)", bestNode, bestScore)
 	return bestNode, nil
 }
 

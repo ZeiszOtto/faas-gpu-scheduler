@@ -77,7 +77,7 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			sendResponse(w, req.UID, true, "Node selection error [fallback]", nil)
 			return
 		}
-		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, pod.GenerateName)
+		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, getPodName(&pod))
 
 		// Building and dispatching JSON Patch
 		patch := buildNodeAffinityPatch(selectedNode)
@@ -87,8 +87,8 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			sendResponse(w, req.UID, false, "An error occurred during marshalling patch", nil)
 			return
 		}
-		log.Printf("[INFO] Patch completed for %s pod with affinity for %s node", pod.GenerateName, selectedNode)
-		sendResponse(w, req.UID, true, "Patch completed with affinity for"+selectedNode, patchBytes)
+		log.Printf("[INFO] Patch completed for %s pod with affinity for %s node", getPodName(&pod), selectedNode)
+		sendResponse(w, req.UID, true, "Patch completed with affinity for "+selectedNode, patchBytes)
 	}
 }
 
@@ -168,4 +168,17 @@ func sendResponse(w http.ResponseWriter, uid interface{}, allowed bool, message 
 	if _, err := w.Write(responseBytes); err != nil {
 		log.Printf("[ERROR] Failed to write response: %s", err)
 	}
+}
+
+// getPodName returns the name of the pod for logging purposes. Pods created by the controller at
+// admission time don't have explicitly set names, rather a generated name with a random suffix appended
+// to it after the webhook returns.
+func getPodName(pod *corev1.Pod) string {
+	if pod.Name != "" {
+		return pod.Name
+	}
+	if pod.GenerateName != "" {
+		return pod.GenerateName + "<pending>"
+	}
+	return "<unnamed>"
 }
