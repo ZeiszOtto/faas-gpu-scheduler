@@ -19,7 +19,9 @@ type PatchOperation struct {
 	Value interface{} `json:"value,omitempty"`
 }
 
-// handleMutate ...
+// handleMutate returns the HTTP handler for the /mutate endpoint. The handler validates the AdmissionReview,
+// filters out pods that don't request a GPU or don't belong to the target namespace, runs the GPU-aware node
+// selector, and  returns a JSON Patch that injects a preferred nodeAffinity into the pod spec.
 func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Read incoming HTTP Request
@@ -47,9 +49,6 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			return
 		}
 
-		log.Printf("[INFO] Webhook call: Operation=%s Namespace=%s Name=%s",
-			req.Operation, req.Namespace, req.Name)
-
 		// Pod extraction
 		var pod corev1.Pod
 		if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
@@ -57,6 +56,9 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			sendResponse(w, req.UID, false, "Error parsing pod", nil)
 			return
 		}
+
+		log.Printf("[INFO] Webhook call: Operation=%s Namespace=%s Name=%s",
+			req.Operation, req.Namespace, getPodName(&pod))
 
 		// Pod relevance checking
 		if req.Namespace != cfg.TargetNamespace {
@@ -77,7 +79,7 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			sendResponse(w, req.UID, true, "Node selection error [fallback]", nil)
 			return
 		}
-		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, pod.GenerateName)
+		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, getPodName(&pod))
 
 		// Building and dispatching JSON Patch
 		patch := buildNodeAffinityPatch(selectedNode)
@@ -87,8 +89,8 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			sendResponse(w, req.UID, false, "An error occurred during marshalling patch", nil)
 			return
 		}
-		log.Printf("[INFO] Patch completed for %s pod with affinity for %s node", pod.GenerateName, selectedNode)
-		sendResponse(w, req.UID, true, "Patch completed with affinity for"+selectedNode, patchBytes)
+		log.Printf("[INFO] Patch completed for %s pod with affinity for %s node", getPodName(&pod), selectedNode)
+		sendResponse(w, req.UID, true, "Patch completed with affinity for "+selectedNode, patchBytes)
 	}
 }
 
@@ -104,7 +106,8 @@ func requestsGPU(pod *corev1.Pod) bool {
 	return false
 }
 
-// buildNodeAffinityPatch ...
+// buildNodeAffinityPatch constructs a JSON Patch that adds a soft nodeAffinity preference to the pod spec,
+// biasing the kube-scheduler toward the given node without making it a hard constraint.
 func buildNodeAffinityPatch(nodeName string) []PatchOperation {
 	affinity := corev1.Affinity{
 		NodeAffinity: &corev1.NodeAffinity{
@@ -162,10 +165,24 @@ func sendResponse(w http.ResponseWriter, uid interface{}, allowed bool, message 
 	if err != nil {
 		log.Printf("[ERROR] An error occurred during marshalling response: %s", err)
 		http.Error(w, "Error marshalling response", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(responseBytes); err != nil {
 		log.Printf("[ERROR] Failed to write response: %s", err)
 	}
+}
+
+// getPodName returns the name of the pod for logging purposes. Pods created by the controller at
+// admission time don't have explicitly set names, rather a generated name with a random suffix appended
+// to it after the webhook returns.
+func getPodName(pod *corev1.Pod) string {
+	if pod.Name != "" {
+		return pod.Name
+	}
+	if pod.GenerateName != "" {
+		return pod.GenerateName + "<pending>"
+	}
+	return "<unnamed>"
 }

@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+
 	log.Println("[INFO] Starting scheduler...")
 
 	cfg := LoadConfig()

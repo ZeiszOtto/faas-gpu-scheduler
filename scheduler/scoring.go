@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+// selectNode is the core scheduling decision function. It queries the latest GPU metrics from Prometheus,
+// scores every node that has a known GPU model in nodeGPUMap, and returns the hostname with the highest final score.
+// Nodes with no GPU mapping or scoring failures are logged and skipped rather than aborting the whole decision.
+// Returns an error only if no node could be scored at all.
 func selectNode(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) (string, error) {
 	// 1) Query GPU metrics
 	metrics, err := QueryGPUMetrics(cfg)
@@ -21,7 +25,7 @@ func selectNode(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) (
 	for hostname, metric := range metrics {
 		dbModelName, exists := nodeGPUMap[hostname]
 		if !exists {
-			log.Printf("[WARNING] No GPU model mapping for node %s — skipping", hostname)
+			log.Printf("[ERROR] No GPU model mapping for node %s — skipping", hostname)
 			continue
 		}
 
@@ -39,7 +43,7 @@ func selectNode(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) (
 		capWeight := cfg.CapabilityWeight
 		finalScore := (1-capWeight)*dynamicScore + capWeight*staticScore
 
-		log.Printf("[SCORING] %s: model=%s, dynamic=%.4f, static=%.4f, final=%.4f (capWeight=%.2f)",
+		log.Printf("[INFO/SCORING] %s: model=%s, dynamic=%.4f, static=%.4f, final=%.4f (capWeight=%.2f)",
 			hostname, dbModelName, dynamicScore, staticScore, finalScore, capWeight)
 
 		if finalScore > bestScore {
@@ -52,10 +56,13 @@ func selectNode(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) (
 	if bestNode == "" {
 		return "", fmt.Errorf("no scoreable nodes found: all nodes failed GPU model matching or scoring")
 	}
-	log.Printf("[INFO] Selected node: %s (score=%.4f)", bestNode, bestScore)
+	log.Printf("[INFO/SCORING] Selected node: %s (score=%.4f)", bestNode, bestScore)
 	return bestNode, nil
 }
 
+// computeDynamicScore produces a [0.0, 1.0] score representing how "free" a node currently is, based on real-time
+// DCGM metrics. The advertised total VRAM and the DCGM-reported total may differ by a few hundred MB due to
+// driver-reserved memory; the clamp absorbs this discrepancy without distorting the score.
 func computeDynamicScore(metric NodeMetric, totalVRAM float64) float64 {
 	idleRatio := 1.0 - (metric.GPUUtilization / 100.0)
 
@@ -70,6 +77,9 @@ func computeDynamicScore(metric NodeMetric, totalVRAM float64) float64 {
 	return 0.5*idleRatio + 0.5*vramRatio
 }
 
+// matchGPUName tries to resolve a DCGM-reported GPU model name (e.g. "NVIDIA GeForce RTX 4060 Ti")
+// to a database key (e.g. "GeForce RTX 4060 Ti 16 GB"). If an exact match is not found the algorithm
+// picks the one whose advertised VRAM is closest to the DCGM-reported total VRAM.
 func matchGPUName(dcgmName string, gpuDB *GPUDatabase, totalVRAMMB float64) (string, bool) {
 	if dcgmName == "" {
 		return "", false

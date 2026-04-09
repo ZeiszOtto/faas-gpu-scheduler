@@ -93,7 +93,8 @@ func QueryGPUMetrics(cfg *Config) (map[string]NodeMetric, error) {
 
 	// Logging gathered metrics
 	for node, m := range metrics {
-		log.Printf("[METRICS] %s: GPU=%.1f%% VRAM_FREE=%.0f MB MODEL=%s", node, m.GPUUtilization, m.VRAMFree, m.GPUModel)
+		log.Printf("[INFO/METRICS] %s: GPU=%.1f%% | VRAM_FREE=%.0f MB | MODEL=%s",
+			node, m.GPUUtilization, m.VRAMFree, m.GPUModel)
 	}
 
 	if len(metrics) == 0 {
@@ -146,8 +147,8 @@ func queryPrometheus(prometheusURL string, query string) ([]prometheusResult, er
 	return promResponse.Data.Result, nil
 }
 
-// BuildNodeGPUMap queries DCGM metrics once at startup to build a mapping of
-// node hostnames to GPU database model names.
+// BuildNodeGPUMap queries DCGM metrics once at startup to build a mapping of node hostnames
+// to GPU database model names.
 func BuildNodeGPUMap(cfg *Config, gpuDB *GPUDatabase) (map[string]string, error) {
 	// Query total VRAM per node: free + used = constant regardless of load
 	query := "DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED"
@@ -178,7 +179,7 @@ func BuildNodeGPUMap(cfg *Config, gpuDB *GPUDatabase) (map[string]string, error)
 		}
 
 		nodeGPUMap[hostname] = dbName
-		log.Printf("[GPUMAP] %s → %s (DCGM: %q, totalVRAM: %.0f MB)", hostname, dbName, modelName, totalVRAM)
+		log.Printf("[INFO/GPUMAP] %s → %s (DCGM: %q, totalVRAM: %.0f MB)", hostname, dbName, modelName, totalVRAM)
 	}
 
 	if len(nodeGPUMap) == 0 {
