@@ -47,8 +47,8 @@ func QueryGPUMetrics(cfg *Config) (map[string]NodeMetric, error) {
 	window := fmt.Sprintf("%ds", int(cfg.MetricWindow.Seconds()))
 
 	// Creating the PromQL queries with avg_over_time to avoid momentary GPU spikes poisoning the query
-	queryUtil := fmt.Sprintf("avg_over_time(DCGM_FI_DEV_GPU_UTIL[%s])", window)
-	queryVRAM := fmt.Sprintf("avg_over_time(DCGM_FI_DEV_FB_FREE[%s])", window)
+	queryUtil := fmt.Sprintf("max by (Hostname, modelName) (avg_over_time(DCGM_FI_DEV_GPU_UTIL[%s]))", window)
+	queryVRAM := fmt.Sprintf("max by (Hostname, modelName) (avg_over_time(DCGM_FI_DEV_FB_FREE[%s]))", window)
 
 	// Querying
 	utilizationResults, err := queryPrometheus(cfg.PrometheusURL, queryUtil)
@@ -151,7 +151,7 @@ func queryPrometheus(prometheusURL string, query string) ([]prometheusResult, er
 // to GPU database model names.
 func BuildNodeGPUMap(cfg *Config, gpuDB *GPUDatabase) (map[string]string, error) {
 	// Query total VRAM per node: free + used = constant regardless of load
-	query := "DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED"
+	query := "max by (Hostname, modelName) (DCGM_FI_DEV_FB_FREE + DCGM_FI_DEV_FB_USED)"
 	results, err := queryPrometheus(cfg.PrometheusURL, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query VRAM for GPU model resolution: %w", err)

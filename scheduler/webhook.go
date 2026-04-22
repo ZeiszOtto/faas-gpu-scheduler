@@ -58,7 +58,7 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 		}
 
 		log.Printf("[INFO] Webhook call: Operation=%s Namespace=%s Name=%s",
-			req.Operation, req.Namespace, getPodName(&pod))
+			req.Operation, req.Namespace, getPodName(&pod, req.UID))
 
 		// Pod relevance checking
 		if req.Namespace != cfg.TargetNamespace {
@@ -79,7 +79,7 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			sendResponse(w, req.UID, true, "Node selection error [fallback]", nil)
 			return
 		}
-		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, getPodName(&pod))
+		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, getPodName(&pod, req.UID))
 
 		// Building and dispatching JSON Patch
 		patch := buildNodeAffinityPatch(selectedNode)
@@ -89,7 +89,7 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			sendResponse(w, req.UID, false, "An error occurred during marshalling patch", nil)
 			return
 		}
-		log.Printf("[INFO] Patch completed for %s pod with affinity for %s node", getPodName(&pod), selectedNode)
+		log.Printf("[INFO] Patch completed for %s pod with affinity for %s node", getPodName(&pod, req.UID), selectedNode)
 		sendResponse(w, req.UID, true, "Patch completed with affinity for "+selectedNode, patchBytes)
 	}
 }
@@ -177,12 +177,16 @@ func sendResponse(w http.ResponseWriter, uid interface{}, allowed bool, message 
 // getPodName returns the name of the pod for logging purposes. Pods created by the controller at
 // admission time don't have explicitly set names, rather a generated name with a random suffix appended
 // to it after the webhook returns.
-func getPodName(pod *corev1.Pod) string {
+func getPodName(pod *corev1.Pod, uid types.UID) string {
 	if pod.Name != "" {
 		return pod.Name
 	}
 	if pod.GenerateName != "" {
-		return pod.GenerateName + "<pending>"
+		uidStr := string(uid)
+		if len(uidStr) > 8 {
+			uidStr = uidStr[:8]
+		}
+		return pod.GenerateName + uidStr
 	}
 	return "<unnamed>"
 }
