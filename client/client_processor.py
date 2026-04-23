@@ -1,7 +1,7 @@
 import cv2
 import requests
 import yaml
-import logging
+import csv
 import sys
 import time
 from datetime import datetime, timezone
@@ -11,6 +11,11 @@ from ultralytics import YOLO
 CONFIG = "config.yaml"
 PERSON_CLASS = 0
 CAR_CLASSES  = {2, 3, 5, 7}  # car, motorcycle, bus, truck
+CSV_FIELDS = [
+    "timestamp", "frame", "class", "confidence",
+    "mode", "target", "status_code", "latency_ms",
+    "response", "error",
+]
 
 # Loading of configuration file (Uses config.yaml unless specified otherwise)
 def load_config(path: str = CONFIG) -> dict:
@@ -19,19 +24,11 @@ def load_config(path: str = CONFIG) -> dict:
 
 
 # Setup of logger
-def setup_logger(output: str) -> logging.Logger:
-    logger = logging.getLogger("client")
-    logger.setLevel(logging.INFO)
-    fmt = logging.Formatter("%(asctime)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
-
-    if output == "stdout":
-        handler = logging.StreamHandler(sys.stdout)
-    else:
-        handler = logging.FileHandler(output)
-
-    handler.setFormatter(fmt)
-    logger.addHandler(handler)
-    return logger
+def setup_csv_writer(output_path: str):
+    f = open(output_path, "w", newline="", buffering=1, encoding="utf-8")
+    writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+    writer.writeheader()
+    return f, writer
 
 
 # Function to open video file and return a VideoCapture object
@@ -62,22 +59,27 @@ def extract_crop(frame, box) -> bytes:
 
 
 # Function to send the cropped image to the target
-def dispatch(url: str,       image_bytes: bytes,  logger: logging.Logger,
-             cls_name: str,  confidence: float,   frame_idx: int,
-             mode: str,      save_dir: str = "crops"):
+def dispatch(url: str,        image_bytes: bytes,    csv_writer,
+             cls_name: str,   confidence: float,     frame_idx: int,
+             mode: str,       save_dir: str = "crops"):
+
+    ts = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
     if mode == "save":
         Path(save_dir).mkdir(parents=True, exist_ok=True)
         filename = f"{save_dir}/{frame_idx}_{cls_name}_{confidence:.2f}.jpg"
         with open(filename, "wb") as f:
             f.write(image_bytes)
-        logger.info(
-            f"frame={frame_idx} class={cls_name} conf={confidence:.2f} "
-            f"saved={filename}"
-        )
+        csv_writer.writerow({
+            "timestamp": ts,
+            "frame": frame_idx,
+            "class": cls_name,
+            "confidence": f"{confidence:.2f}",
+            "mode": "save",
+            "target": filename,
+        })
         return
 
-    send_ts = datetime.now(timezone.utc).isoformat()
     try:
         t0 = time.perf_counter()
         resp = requests.post(
@@ -87,17 +89,27 @@ def dispatch(url: str,       image_bytes: bytes,  logger: logging.Logger,
             timeout=10,
         )
         latency_ms = (time.perf_counter() - t0) * 1000
-        logger.info(
-            f"frame={frame_idx} class={cls_name} conf={confidence:.2f} "
-            f"sent_at={send_ts} target={url} "
-            f"status={resp.status_code} latency_ms={latency_ms:.1f} "
-            f"response={resp.text[:200].strip()!r}"
-        )
+        csv_writer.writerow({
+            "timestamp": ts,
+            "frame": frame_idx,
+            "class": cls_name,
+            "confidence": f"{confidence:.2f}",
+            "mode": "http",
+            "target": url,
+            "status_code": resp.status_code,
+            "latency_ms": f"{latency_ms:.1f}",
+            "response": resp.text[:200].strip(),
+        })
     except requests.exceptions.RequestException as e:
-        logger.warning(
-            f"frame={frame_idx} class={cls_name} conf={confidence:.2f} "
-            f"sent_at={send_ts} target={url} error={e}"
-        )
+        csv_writer.writerow({
+            "timestamp": ts,
+            "frame": frame_idx,
+            "class": cls_name,
+            "confidence": f"{confidence:.2f}",
+            "mode": "http",
+            "target": url,
+            "error": str(e),
+        })
 
 
 # ----- YOLO detection logic
@@ -172,6 +184,7 @@ def run(config_path: str = "config.yaml"):
 
     finally:
         capture.release()
+        csv_file.close()
         logger.info(f"Pipeline finished — processed {frame_idx} frames")
 
 
