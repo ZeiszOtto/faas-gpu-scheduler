@@ -5,23 +5,31 @@ services:
   plate_detect: "http://plate-detect.default.192-168-1-200.sslip.io/detect"
 
 video:
-  source: "C:\\Users\\fragm\\Desktop\\inputs\\input.mp4"
+  source: "../yolo-input/input_dataset.mp4"
   frame_skip: 1
 
 filtering:
-  min_person_height: 250   # pixel, ennél kisebb személyt kihagyjuk
-  min_vehicle_width: 350   # pixel, ennél kisebb járművet kihagyjuk
+  min_person_height: 100   # pixel, ennél kisebb személyt kihagyjuk
+  min_vehicle_width: 200   # pixel, ennél kisebb járművet kihagyjuk
+
+crop_processing:
+  enabled: true
+  letterbox: true                   # true = aspect-aware resize + padding, false = stretch
+  person:
+    target_size: [240, 440]         # [width, height] — kb. 1:2 aspect (tipikus person)
+  vehicle:
+    target_size: [400, 400]         # [width, height] — 1:1 aspect (tipikus vehicle)
 
 tracking:
-  cooldown_frames: 30
+  cooldown_frames: 15
 
 yolo:
   model: "yolov8n.pt"
-  confidence_threshold: 0.5
-  device: "cpu"
+  confidence_threshold: 0.4
+  device: "cuda:0"
 
 logging:
   output: "results.log"
 
 output:
-  save_dir: "crops"
+  save_dir: "../yolo-output"

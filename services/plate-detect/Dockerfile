@@ -10,14 +10,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Install all Python dependencies from a fully pinned requirements.txt.
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir --break-system-packages -r requirements.txt && \
     pip install --no-cache-dir --break-system-packages torch torchvision \
     --index-url https://download.pytorch.org/whl/cu128
 
 COPY . .
 
+# Pre-bake the EasyOCR model weights into the image to avoid runtime downloads during cold-start.
 RUN python3 -c "import easyocr; easyocr.Reader(['en'], gpu=False, model_storage_directory='/app/models')" || true
 
 EXPOSE 8080

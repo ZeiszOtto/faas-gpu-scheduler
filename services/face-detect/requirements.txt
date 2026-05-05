@@ -1,8 +1,115 @@
-fastapi>=0.100.0
-uvicorn>=0.23.0
-retina-face>=0.0.17
-opencv-python-headless>=4.8.0
-torch>=2.0.0
-torchvision>=0.15.0
-tf-keras>=2.16.0
-numpy>=1.24.0
+# =============================================================================
+# Fully pinned dependencies for face-detect service
+# =============================================================================
+# This file pins every transitive dependency to ensure bit-identical builds
+# across time. The pins were captured from a known working image which used
+# TensorFlow 2.20.0 with the CUDA 12 stack (cu12 wheels). This combination is
+# compatible with both NVIDIA Pascal and Ada Lovelace architectures.
+#
+# DO NOT upgrade tensorflow above 2.20.0 — version 2.21.0 jumped to the CUDA 13
+# stack (cu13 wheels), which drops support for compute capability < 7.5.
+# =============================================================================
+
+# PyTorch wheels are hosted on a separate index (CUDA 12.8 build)
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+# --- TensorFlow stack (pinned to last cu12-compatible version) ---
+tensorflow==2.20.0
+tf_keras==2.20.1
+keras==3.13.2
+tensorboard==2.20.0
+tensorboard-data-server==0.7.2
+
+# --- PyTorch stack (cu12.8 wheels) ---
+torch==2.10.0
+torchvision==0.25.0
+triton==3.6.0
+
+# --- NVIDIA CUDA 12 runtime (Pascal-compatible) ---
+nvidia-cublas-cu12==12.8.4.1
+nvidia-cuda-cupti-cu12==12.8.90
+nvidia-cuda-nvrtc-cu12==12.8.93
+nvidia-cuda-runtime-cu12==12.8.90
+nvidia-cudnn-cu12==9.10.2.21
+nvidia-cufft-cu12==11.3.3.83
+nvidia-cufile-cu12==1.13.1.3
+nvidia-curand-cu12==10.3.9.90
+nvidia-cusolver-cu12==11.7.3.90
+nvidia-cusparse-cu12==12.5.8.93
+nvidia-cusparselt-cu12==0.7.1
+nvidia-nccl-cu12==2.27.5
+nvidia-nvjitlink-cu12==12.8.93
+nvidia-nvshmem-cu12==3.4.5
+nvidia-nvtx-cu12==12.8.90
+cuda-bindings==12.9.4
+cuda-pathfinder==1.4.3
+
+# --- Web framework ---
+fastapi==0.135.1
+uvicorn==0.42.0
+starlette==0.52.1
+h11==0.16.0
+anyio==4.12.1
+sniffio==1.3.1
+
+# --- RetinaFace + image processing ---
+retina-face==0.0.17
+opencv-python==4.13.0.92
+opencv-python-headless==4.13.0.92
+pillow==12.1.1
+gdown==5.2.1
+beautifulsoup4==4.14.3
+soupsieve==2.8.3
+PySocks==1.7.1
+
+# --- Pydantic / FastAPI deps ---
+pydantic==2.12.5
+pydantic_core==2.41.5
+annotated-types==0.7.0
+annotated-doc==0.0.4
+typing_extensions==4.15.0
+typing-inspection==0.4.2
+
+# --- TensorFlow / Keras core deps ---
+absl-py==2.4.0
+astunparse==1.6.3
+flatbuffers==25.12.19
+gast==0.7.0
+google-pasta==0.2.0
+grpcio==1.78.0
+h5py==3.16.0
+libclang==18.1.1
+ml_dtypes==0.5.4
+namex==0.1.0
+opt_einsum==3.4.0
+optree==0.19.0
+protobuf==7.34.0
+termcolor==3.3.0
+wrapt==2.1.2
+
+# --- Numpy / scientific stack ---
+numpy==2.4.3
+sympy==1.14.0
+mpmath==1.3.0
+networkx==3.6.1
+fsspec==2026.2.0
+filelock==3.25.2
+
+# --- Utility libraries ---
+click==8.3.1
+requests==2.32.5
+urllib3==2.6.3
+certifi==2026.2.25
+charset-normalizer==3.4.6
+idna==3.11
+six==1.17.0
+packaging==26.0
+tqdm==4.67.3
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+Markdown==3.10.2
+markdown-it-py==4.0.0
+mdurl==0.1.2
+Pygments==2.19.2
+rich==14.3.3
+Werkzeug==3.1.6

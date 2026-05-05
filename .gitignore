@@ -16,3 +16,7 @@ __pycache__/
 # Logs
 *.log
 crops_*
+
+# Input and output files
+yolo-input/
+yolo-output/
