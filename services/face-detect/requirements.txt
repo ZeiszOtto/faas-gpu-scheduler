@@ -10,20 +10,11 @@
 # stack (cu13 wheels), which drops support for compute capability < 7.5.
 # =============================================================================
 
-# PyTorch wheels are hosted on a separate index (CUDA 12.8 build)
---extra-index-url https://download.pytorch.org/whl/cu128
-
 # --- TensorFlow stack (pinned to last cu12-compatible version) ---
 tensorflow==2.20.0
-tf_keras==2.20.1
 keras==3.13.2
 tensorboard==2.20.0
 tensorboard-data-server==0.7.2
-
-# --- PyTorch stack (cu12.8 wheels) ---
-torch==2.10.0
-torchvision==0.25.0
-triton==3.6.0
 
 # --- NVIDIA CUDA 12 runtime (Pascal-compatible) ---
 nvidia-cublas-cu12==12.8.4.1

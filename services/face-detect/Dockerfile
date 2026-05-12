@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
 # Tell TensorFlow's XLA backend where to find CUDA toolkit components (libdevice, ptxas).
 ENV XLA_FLAGS="--xla_gpu_cuda_data_dir=/usr/local/cuda"
 
+# Force TensorFlow to use the legacy Keras 2 API (provided by tf-keras package).
+ENV TF_USE_LEGACY_KERAS=1
+
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-dev \
@@ -28,10 +31,14 @@ RUN pip install --no-cache-dir --break-system-packages \
     --retries 5 \
     -r requirements.txt
 
+# tf-keras provides the legacy Keras 2 API that the retinaface package requires. \
+# TensorFlow 2.16+ ships with Keras 3 by default, which breaks retinaface's  model construction.
+RUN pip install --no-cache-dir --break-system-packages tf-keras
+
 COPY . .
 
 # Pre-bake the RetinaFace model weights into the image to avoid runtime downloads during cold-start.
-RUN python3 -c "from retinaface import RetinaFace; RetinaFace.build_model()" || true
+RUN python3 -c "from retinaface import RetinaFace; RetinaFace.build_model()"
 
 EXPOSE 8080
 

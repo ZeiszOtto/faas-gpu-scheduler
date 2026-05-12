@@ -5,11 +5,26 @@ metadata:
   namespace: default
 spec:
   template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/metric: "concurrency"
+        autoscaling.knative.dev/target: "5"
+        autoscaling.knative.dev/maxScale: "4"
+        autoscaling.knative.dev/panic-threshold-percentage: "1000"
+        autoscaling.knative.dev/scale-down-delay: "90s"
     spec:
+      containerConcurrency: 5
       containers:
         - image: zeiszotto/face-detect:latest
           ports:
             - containerPort: 8080
+          env:
+            # Enable TF growth mode (BFC allocator only grows on demand).
+            - name: TF_FORCE_GPU_ALLOW_GROWTH
+              value: "true"
+            # Switch from BFC to CUDA stream-ordered allocator.
+            - name: TF_GPU_ALLOCATOR
+              value: "cuda_malloc_async"
           resources:
             limits:
               nvidia.com/gpu: "1"

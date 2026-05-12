@@ -1,3 +1,12 @@
+# Configure TensorFlow to allocate GPU memory lazily.
+import tensorflow as tf
+
+for gpu in tf.config.list_physical_devices('GPU'):
+    try:
+        tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(f"[WARNING] Could not set memory growth: {e}", flush=True)
+
 import io
 import numpy as np
 import cv2
@@ -5,11 +14,30 @@ from fastapi import FastAPI, HTTPException, Request
 from retinaface import RetinaFace
 from contextlib import asynccontextmanager
 
+# Warmup image size chosen to match the typical YOLO person-crop dimensions.
+WARMUP_IMAGE_WIDTH = 240
+WARMUP_IMAGE_HEIGHT = 440
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global detector
+
+    # Trigger model build at startup instead of on first request to make warmup explicit and measurable.
+    print("[STARTUP] Building RetinaFace model...", flush=True)
+    RetinaFace.build_model()
     detector = RetinaFace
+
+    # Run a dummy inference to trigger cuDNN convolution autotune.
+    # Without this, the first real request pays a one-time ~5s tail latency.
+    print(f"[STARTUP] Running warmup inference ({WARMUP_IMAGE_WIDTH}x{WARMUP_IMAGE_HEIGHT})...", flush=True)
+    # numpy array shape is (height, width, channels)
+    dummy_frame = np.zeros((WARMUP_IMAGE_HEIGHT, WARMUP_IMAGE_WIDTH, 3), dtype=np.uint8)
+    detector.detect_faces(dummy_frame)
+    print("[STARTUP] Warmup complete, ready for requests.", flush=True)
+
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 
