@@ -8,8 +8,8 @@ Requirements:
     pip install "dbgpu[fuzz]"
 
 Usage:
-    python generate_gpu_db.py                     # default output: gpu_database.json
-    python generate_gpu_db.py -o custom_path.json  # custom output path
+    python generate_gpudb.py                      # default output: gpu_database.json
+    python generate_gpudb.py -o custom_path.json  # custom output path
 """
 
 import argparse
@@ -69,10 +69,10 @@ INCLUDED_GENERATIONS = {
 SCORING_PRESETS = {
     "inference": {
         "description": "Optimized for inference workloads (80% inference / 20% training).",
-        "bandwidth_weight":   0.35,
-        "vram_weight":        0.15,
+        "bandwidth_weight":   0.20,
+        "vram_weight":        0.10,
         "tensor_weight":      0.20,
-        "fp32_weight":        0.20,
+        "fp32_weight":        0.40,
         "memory_type_weight": 0.10,
     },
     "balanced": {

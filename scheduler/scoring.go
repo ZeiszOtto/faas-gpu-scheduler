@@ -41,7 +41,10 @@ func selectNode(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) (
 		}
 
 		capWeight := cfg.CapabilityWeight
-		finalScore := (1-capWeight)*dynamicScore + capWeight*staticScore
+
+		// Geometric mean: expected throughput ≈ capability × availability.
+		// capWeight controls how strongly the static (capability) score dominates.
+		finalScore := math.Pow(dynamicScore, 1-capWeight) * math.Pow(staticScore, capWeight)
 
 		log.Printf("[INFO/SCORING] %s: model=%s, dynamic=%.4f, static=%.4f, final=%.4f (capWeight=%.2f)",
 			hostname, dbModelName, dynamicScore, staticScore, finalScore, capWeight)

@@ -8,16 +8,17 @@ import (
 )
 
 type Config struct {
-	TLSCertFile      string
-	TLSKeyFile       string
-	Port             string
-	PrometheusURL    string
-	MetricWindow     time.Duration
-	TargetNamespace  string
-	GPUDatabasePath  string
-	ScoringPreset    string
-	TensorScoring    bool
-	CapabilityWeight float64
+	TLSCertFile       string
+	TLSKeyFile        string
+	Port              string
+	PrometheusURL     string
+	MetricWindow      time.Duration
+	TargetNamespace   string
+	GPUDatabasePath   string
+	ScoringPreset     string
+	TensorScoring     bool
+	CapabilityWeight  float64
+	SchedulingEnabled bool
 }
 
 // LoadConfig reads all configuration from environment variables, performs type conversions and validation,
@@ -60,8 +61,17 @@ func LoadConfig() *Config {
 	}
 	cfg.CapabilityWeight = capWeight
 
-	log.Printf("[INFO] Configuration loaded: port=%s, prometheus=%s, window=%s",
-		cfg.Port, cfg.PrometheusURL, cfg.MetricWindow)
+	// SchedulingEnabled type conversion. Defaults to true so omitting the variable preserves
+	// the original active-scheduling behavior.
+	schedulingStr := getEnv("SCHEDULING_ENABLED", "true")
+	schedulingEnabled, err := strconv.ParseBool(schedulingStr)
+	if err != nil {
+		log.Fatalf("Invalid value for SCHEDULING_ENABLED: %q", schedulingStr)
+	}
+	cfg.SchedulingEnabled = schedulingEnabled
+
+	log.Printf("[INFO] Configuration loaded: port=%s, prometheus=%s, window=%s, scheduling_enabled=%v",
+		cfg.Port, cfg.PrometheusURL, cfg.MetricWindow, cfg.SchedulingEnabled)
 
 	return cfg
 }

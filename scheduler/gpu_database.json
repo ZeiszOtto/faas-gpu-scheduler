@@ -1,16 +1,16 @@
 {
   "metadata": {
-    "timestamp": "2026-04-01T08:48:24.222255+00:00",
+    "timestamp": "2026-05-12T18:40:05.138553+00:00",
     "source": "dbgpu v2025.12 (https://github.com/painebenjamin/dbgpu)",
     "gpu_count": 161
   },
   "scoring_presets": {
     "inference": {
       "description": "Optimized for inference workloads (80% inference / 20% training).",
-      "bandwidth_weight": 0.35,
-      "vram_weight": 0.15,
+      "bandwidth_weight": 0.2,
+      "vram_weight": 0.1,
       "tensor_weight": 0.2,
-      "fp32_weight": 0.2,
+      "fp32_weight": 0.4,
       "memory_type_weight": 0.1
     },
     "balanced": {

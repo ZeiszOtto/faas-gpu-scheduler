@@ -81,6 +81,15 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 		}
 		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, getPodName(&pod, req.UID))
 
+		// Passive mode: log the would-be decision and delegate to the default Kubernetes scheduler.
+		// All metrics and scoring still run for diagnostic comparison, but no node affinity is patched.
+		if !cfg.SchedulingEnabled {
+			log.Printf("[INFO] Default scheduler selected node: %s | Pod: %s/%s",
+				selectedNode, req.Namespace, getPodName(&pod, req.UID))
+			sendResponse(w, req.UID, true, "Scheduling disabled, delegating to default scheduler", nil)
+			return
+		}
+
 		// Building and dispatching JSON Patch
 		patch := buildNodeAffinityPatch(selectedNode)
 		patchBytes, err := json.Marshal(patch)

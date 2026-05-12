@@ -102,13 +102,29 @@ kubectl patch ksvc face-detect -n default --type=merge -p '{
 }'
 
 
-### TODO ###
-- "PTX compilation by driver" fallback:
-  2026-04-30 11:47:07.018474: Created device /job:localhost/replica:0/task:0/device:GPU:0
-  2026-04-30 11:47:08.894551: Loaded cuDNN version 91002
-  2026-04-30 11:47:10.143562: NVPTX libdevice WARNING
-  2026-04-30 11:47:10.199704: Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+### Pod warmup commands ###
 
-- plate-detect szöveg detekciós algoritmus nem fut let
+$elapsed = Measure-Command {
+    $response = curl.exe -s -X POST --data-binary "@C:\Users\fragm\GolandProjects\faas-gpu-scheduler\yolo-output\1_person_0.45.jpg" `
+        -H "Content-Type: image/jpeg" `
+        http://face-detect.default.192-168-1-200.sslip.io/detect
+    Write-Host "Response: $response"
+}
+Write-Host "Warmup latency: $($elapsed.TotalMilliseconds) ms" -ForegroundColor Yellow
+Start-Sleep -Seconds 8
+Write-Host "Ready for measurement." -ForegroundColor Green
 
-- párhuzamos thread-poolos kérések vs Measure-Command
+
+$elapsed = Measure-Command {
+    $response = curl.exe -s -X POST --data-binary "@C:\Users\fragm\GolandProjects\faas-gpu-scheduler\yolo-output\112_vehicle_0.85.jpg" `
+        -H "Content-Type: image/jpeg" `
+        http://plate-detect.default.192-168-1-200.sslip.io/detect
+    Write-Host "Response: $response"
+}
+Write-Host "Warmup latency: $($elapsed.TotalMilliseconds) ms" -ForegroundColor Yellow
+Start-Sleep -Seconds 8
+Write-Host "Ready for measurement." -ForegroundColor Green
+
+### PowerShell scripting ###
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass

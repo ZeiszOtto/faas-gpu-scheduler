@@ -24,3 +24,7 @@ data:
   # Weight of the static GPU capability score in the final score
   # Must be in the [0.0, 1.0] range
   CAPABILITY_WEIGHT: "0.2"
+
+  # Master switch for the scheduler. When "false", the webhook still computes and logs GPU metrics
+  # and node scoring for diagnostic purposes, but skips the node affinity patch
+  SCHEDULING_ENABLED: "true"
