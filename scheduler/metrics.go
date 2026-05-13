@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +10,11 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // NodeMetric contains the GPU Utilization and remaining VRAM values for a node
@@ -38,6 +44,10 @@ type prometheusResult struct {
 	Metric map[string]string `json:"metric"`
 	Value  []interface{}     `json:"value"` // "value": [ 1435781451.781, "1" ]
 }
+
+// =============================================================================================================
+// Prometheus metrics
+// =============================================================================================================
 
 // QueryGPUMetrics queries Prometheus for GPU utilization and free VRAM metrics across all nodes
 // using PromQL with moving average smoothing. Returns a map of node hostname to NodeMetric.
@@ -212,4 +222,99 @@ func extractHostnameAndValue(result prometheusResult) (string, float64, error) {
 	}
 
 	return hostname, value, nil
+}
+
+// =============================================================================================================
+// Kubernetes API metrics
+// =============================================================================================================
+
+// knativeServiceLabel is the standard Knative label applied to all pods belonging to a Knative Service.
+// It is used as the LabelSelector when counting per-node replicas.
+const knativeServiceLabel = "serving.knative.dev/service"
+
+// NewKubernetesClient builds a Kubernetes API client using the in-cluster service account credentials
+// mounted by the deployment at /var/run/secrets/kubernetes.io/serviceaccount/. Called once at startup.
+func NewKubernetesClient() (kubernetes.Interface, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load in-cluster config: %w", err)
+	}
+
+	// Short timeout: the webhook itself must respond within ~5s to avoid kube-apiserver retries.
+	config.Timeout = 2 * time.Second
+
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Kubernetes client: %w", err)
+	}
+
+	log.Printf("[INFO] Kubernetes API client initialized")
+	return client, nil
+}
+
+// CountReplicasPerNode returns a map of node hostname → number of pods belonging to the given
+// Knative service that are currently placed on that node. Pods in terminal phases (Succeeded, Failed) are excluded.
+func CountReplicasPerNode(client kubernetes.Interface, namespace, serviceName string, nodeGPUMap map[string]string) (map[string]int, error) {
+	// Initialize every known GPU node with zero so the result map is always complete.
+	counts := make(map[string]int, len(nodeGPUMap))
+	for node := range nodeGPUMap {
+		counts[node] = 0
+	}
+
+	listOpts := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", knativeServiceLabel, serviceName),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	pods, err := client.CoreV1().Pods(namespace).List(ctx, listOpts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list pods for service %q: %w", serviceName, err)
+	}
+
+	for i := range pods.Items {
+		pod := &pods.Items[i]
+
+		// Skip terminal-phase pods so the count reflects live placement, not historical churn.
+		if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+			continue
+		}
+
+		targetNode := resolveTargetNode(pod)
+		if targetNode == "" {
+			// Neither scheduled nor patched by us; nothing to attribute.
+			continue
+		}
+		// Only count placements on nodes that are known GPU candidates.
+		if _, isGPUNode := counts[targetNode]; !isGPUNode {
+			continue
+		}
+
+		counts[targetNode]++
+	}
+
+	return counts, nil
+}
+
+// resolveTargetNode returns the node a pod is destined for. If the kube-scheduler has already assigned
+// the pod (NodeName set), that value is returned. Otherwise the function inspects the soft node affinity
+// patched in by this webhook during admission and returns its hostname value, so pods admitted but not
+// yet scheduled are still attributed to their intended node.
+func resolveTargetNode(pod *corev1.Pod) string {
+	if pod.Spec.NodeName != "" {
+		return pod.Spec.NodeName
+	}
+
+	if pod.Spec.Affinity == nil || pod.Spec.Affinity.NodeAffinity == nil {
+		return ""
+	}
+	for _, term := range pod.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
+		for _, expr := range term.Preference.MatchExpressions {
+			if expr.Key == "kubernetes.io/hostname" && expr.Operator == corev1.NodeSelectorOpIn && len(expr.Values) > 0 {
+				return expr.Values[0]
+			}
+		}
+	}
+	return ""
 }

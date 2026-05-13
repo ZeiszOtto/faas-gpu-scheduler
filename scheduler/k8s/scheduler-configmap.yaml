@@ -23,8 +23,16 @@ data:
 
   # Weight of the static GPU capability score in the final score
   # Must be in the [0.0, 1.0] range
-  CAPABILITY_WEIGHT: "0.2"
+  CAPABILITY_WEIGHT: "0.5"
 
   # Master switch for the scheduler. When "false", the webhook still computes and logs GPU metrics
   # and node scoring for diagnostic purposes, but skips the node affinity patch
   SCHEDULING_ENABLED: "true"
+
+  # Placement strategy controls how the scheduler picks a node for a new GPU pod:
+  #   capability_only - original single-objective scoring: rank every node by capability x availability
+  #                     and pick the highest. Used as a baseline for measurement reproducibility.
+  #   load_balanced   - two-stage decision: (1) keep only nodes with the lowest current per-service
+  #                     replica count, (2) break ties with capability scoring. Prevents pod
+  #                     concentration on the strongest GPU during scale-up bursts.
+  PLACEMENT_STRATEGY: "load_balanced"

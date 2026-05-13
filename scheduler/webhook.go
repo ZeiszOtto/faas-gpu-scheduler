@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 )
 
 type PatchOperation struct {
@@ -22,7 +23,8 @@ type PatchOperation struct {
 // handleMutate returns the HTTP handler for the /mutate endpoint. The handler validates the AdmissionReview,
 // filters out pods that don't request a GPU or don't belong to the target namespace, runs the GPU-aware node
 // selector, and  returns a JSON Patch that injects a preferred nodeAffinity into the pod spec.
-func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string) http.HandlerFunc {
+func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string,
+	k8sClient kubernetes.Interface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Read incoming HTTP Request
 		body, err := io.ReadAll(r.Body)
@@ -72,23 +74,27 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string)
 			return
 		}
 
+		// Extract the Knative service name from the pod labels
+		serviceName := extractServiceName(&pod)
+
 		// Node selection
-		selectedNode, err := selectNode(cfg, gpuDB, nodeGPUMap)
+		selectedNode, err := selectNode(cfg, gpuDB, nodeGPUMap, k8sClient, serviceName)
 		if err != nil {
 			log.Printf("[ERROR] Unsuccessful node selection: %s — pod allowed without patching", err)
 			sendResponse(w, req.UID, true, "Node selection error [fallback]", nil)
 			return
 		}
-		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, getPodName(&pod, req.UID))
 
 		// Passive mode: log the would-be decision and delegate to the default Kubernetes scheduler.
 		// All metrics and scoring still run for diagnostic comparison, but no node affinity is patched.
 		if !cfg.SchedulingEnabled {
-			log.Printf("[INFO] Default scheduler selected node: %s | Pod: %s/%s",
+			log.Printf("[INFO] Scheduler disabled, recommendation: %s | Pod: %s/%s",
 				selectedNode, req.Namespace, getPodName(&pod, req.UID))
 			sendResponse(w, req.UID, true, "Scheduling disabled, delegating to default scheduler", nil)
 			return
 		}
+
+		log.Printf("[INFO] Selected node: %s | Pod: %s/%s", selectedNode, req.Namespace, getPodName(&pod, req.UID))
 
 		// Building and dispatching JSON Patch
 		patch := buildNodeAffinityPatch(selectedNode)
@@ -113,6 +119,12 @@ func requestsGPU(pod *corev1.Pod) bool {
 		}
 	}
 	return false
+}
+
+// extractServiceName returns the Knative service name from the pod labels, or an empty string if the
+// pod is not part of a Knative service. Reading from a nil label map is safe and yields an empty string.
+func extractServiceName(pod *corev1.Pod) string {
+	return pod.Labels[knativeServiceLabel]
 }
 
 // buildNodeAffinityPatch constructs a JSON Patch that adds a soft nodeAffinity preference to the pod spec,

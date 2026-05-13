@@ -3,3 +3,31 @@ kind: ServiceAccount
 metadata:
   name: gpu-scheduler-account
   namespace: gpu-scheduler
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gpu-scheduler-reader
+  labels:
+    app: gpu-scheduler
+rules:
+  # Read-only access to pods, used by CountReplicasPerNode to query the
+  # current per-node replica distribution of a target service before placement.
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gpu-scheduler-binding
+  labels:
+    app: gpu-scheduler
+subjects:
+  - kind: ServiceAccount
+    name: gpu-scheduler-account
+    namespace: gpu-scheduler
+roleRef:
+  kind: ClusterRole
+  name: gpu-scheduler-reader
+  apiGroup: rbac.authorization.k8s.io

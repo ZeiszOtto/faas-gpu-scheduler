@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+const (
+	PlacementCapabilityOnly = "capability_only"
+	PlacementLoadBalanced   = "load_balanced"
+)
+
 type Config struct {
 	TLSCertFile       string
 	TLSKeyFile        string
@@ -19,6 +24,7 @@ type Config struct {
 	TensorScoring     bool
 	CapabilityWeight  float64
 	SchedulingEnabled bool
+	PlacementStrategy string
 }
 
 // LoadConfig reads all configuration from environment variables, performs type conversions and validation,
@@ -70,8 +76,17 @@ func LoadConfig() *Config {
 	}
 	cfg.SchedulingEnabled = schedulingEnabled
 
-	log.Printf("[INFO] Configuration loaded: port=%s, prometheus=%s, window=%s, scheduling_enabled=%v",
-		cfg.Port, cfg.PrometheusURL, cfg.MetricWindow, cfg.SchedulingEnabled)
+	// PlacementStrategy: chooses between single-objective (capability_only) and
+	// two-stage (load_balanced) decision logic. Defaults to load_balanced.
+	strategy := getEnv("PLACEMENT_STRATEGY", PlacementLoadBalanced)
+	if strategy != PlacementCapabilityOnly && strategy != PlacementLoadBalanced {
+		log.Fatalf("Invalid value for PLACEMENT_STRATEGY: %q (expected %q or %q)",
+			strategy, PlacementCapabilityOnly, PlacementLoadBalanced)
+	}
+	cfg.PlacementStrategy = strategy
+
+	log.Printf("[INFO] Configuration loaded: port=%s, prometheus=%s, window=%s, scheduling_enabled=%v, placement_strategy=%s",
+		cfg.Port, cfg.PrometheusURL, cfg.MetricWindow, cfg.SchedulingEnabled, cfg.PlacementStrategy)
 
 	return cfg
 }

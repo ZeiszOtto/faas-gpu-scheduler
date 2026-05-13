@@ -30,7 +30,12 @@ func main() {
 		log.Fatalf("[ERROR] Failed to build node-to-GPU mapping: %v", err)
 	}
 
-	http.HandleFunc("/mutate", handleMutate(cfg, gpuDB, nodeGPUMap))
+	k8sClient, err := NewKubernetesClient()
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize Kubernetes client: %v", err)
+	}
+
+	http.HandleFunc("/mutate", handleMutate(cfg, gpuDB, nodeGPUMap, k8sClient))
 
 	server := &http.Server{
 		Addr:         ":" + cfg.Port,
