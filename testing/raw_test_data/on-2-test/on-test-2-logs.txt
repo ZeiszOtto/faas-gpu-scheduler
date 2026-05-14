@@ -1,0 +1,116 @@
+face-detect-00013-deployment-c6476c579-5vcsb   0/2     Pending   0          0s    <none>   <none>   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb   0/2     Pending   0          0s    <none>   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb   0/2     ContainerCreating   0          0s    <none>   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb   1/2     Running             0          2s    10.244.0.151   rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   0/2     Pending             0          0s    <none>         <none>       <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   0/2     Pending             0          0s    <none>         rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   0/2     ContainerCreating   0          0s    <none>         rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    0/2     Pending             0          0s    <none>         <none>       <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    0/2     Pending             0          0s    <none>         gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    0/2     ContainerCreating   0          0s    <none>         gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   1/2     Running             0          1s    10.244.0.152   rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   2/2     Running             0          3s    10.244.0.152   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    1/2     Running             0          3s    10.244.2.100   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb    2/2     Running             0          13s   10.244.0.151   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    0/2     Pending             0          0s    <none>         <none>       <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    0/2     Pending             0          0s    <none>         rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    0/2     Pending             0          0s    <none>         <none>       <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    0/2     Pending             0          0s    <none>         gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    0/2     ContainerCreating   0          0s    <none>         rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    0/2     ContainerCreating   0          0s    <none>         gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    1/2     Running             0          1s    10.244.0.153   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    1/2     Running             0          3s    10.244.2.101   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    2/2     Running             0          14s   10.244.2.100   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    2/2     Running             0          12s   10.244.0.153   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    2/2     Running             0          14s   10.244.2.101   gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   0/2     Pending             0          0s    <none>         <none>       <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   0/2     Pending             0          0s    <none>         gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   0/2     ContainerCreating   0          1s    <none>         gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   1/2     Running             0          3s    10.244.2.102   gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   2/2     Running             0          14s   10.244.2.102   gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   2/2     Terminating         0          2m52s   10.244.2.102   gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   2/2     Terminating         0          2m52s   10.244.2.102   gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   1/2     Terminating         0          3m14s   10.244.2.102   gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   0/2     Completed           0          3m24s   10.244.2.102   gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   0/2     Completed           0          3m24s   10.244.2.102   gtx-worker   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-sbv2n   0/2     Completed           0          3m24s   10.244.2.102   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    2/2     Terminating         0          3m56s   10.244.2.100   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    2/2     Terminating         0          3m56s   10.244.2.100   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    1/2     Terminating         0          4m24s   10.244.2.100   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    0/2     Completed           0          4m27s   10.244.2.100   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    0/2     Completed           0          4m28s   10.244.2.100   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-ld2bz    0/2     Completed           0          4m28s   10.244.2.100   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    2/2     Terminating         0          5m      10.244.0.153   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    2/2     Terminating         0          5m      10.244.0.153   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    1/2     Terminating         0          5m22s   10.244.0.153   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb    2/2     Terminating         0          5m40s   10.244.0.151   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb    2/2     Terminating         0          5m40s   10.244.0.151   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    0/2     Completed           0          5m30s   10.244.0.153   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    0/2     Completed           0          5m31s   10.244.0.153   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-bbgvt    0/2     Completed           0          5m31s   10.244.0.153   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb    1/2     Terminating         0          6m3s    10.244.0.151   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb    0/2     Completed           0          6m11s   10.244.0.151   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb    0/2     Completed           0          6m11s   10.244.0.151   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-5vcsb    0/2     Completed           0          6m11s   10.244.0.151   rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   2/2     Terminating         0          6m20s   10.244.0.152   rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   2/2     Terminating         0          6m20s   10.244.0.152   rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   1/2     Terminating         0          6m42s   10.244.0.152   rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   0/2     Completed           0          6m50s   10.244.0.152   rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   0/2     Completed           0          6m51s   10.244.0.152   rtx-master   <none>           <none>
+plate-detect-00019-deployment-f5fdf5f6d-t7vh5   0/2     Completed           0          6m51s   10.244.0.152   rtx-master   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    2/2     Terminating         0          6m54s   10.244.2.101   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    2/2     Terminating         0          6m54s   10.244.2.101   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    1/2     Terminating         0          7m24s   10.244.2.101   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    0/2     Completed           0          7m25s   10.244.2.101   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    0/2     Completed           0          7m26s   10.244.2.101   gtx-worker   <none>           <none>
+face-detect-00013-deployment-c6476c579-nqbjd    0/2     Completed           0          7m26s   10.244.2.101   gtx-worker   <none>           <none>
+
+
+
+2026/05/13 16:15:33.810747 [INFO] Webhook call: Operation=CREATE Namespace=default Name=face-detect-00013-deployment-c6476c579-283bc02e
+2026/05/13 16:15:33.836511 [INFO/PLACEMENT] Service=face-detect replicas-per-node=map[gtx-worker:0 rtx-master:0] min=0 candidates=[rtx-master gtx-worker]
+2026/05/13 16:15:33.895715 [INFO/METRICS] rtx-master: GPU=0.0% | VRAM_FREE=15834 MB | MODEL=NVIDIA GeForce RTX 4060 Ti
+2026/05/13 16:15:33.895723 [INFO/METRICS] gtx-worker: GPU=0.0% | VRAM_FREE=7931 MB | MODEL=NVIDIA GeForce GTX 1070
+2026/05/13 16:15:33.895725 [INFO/SCORING] rtx-master: model=GeForce RTX 4060 Ti 16 GB, dynamic=0.9832, static=0.2016, final=0.4452 (capWeight=0.50)
+2026/05/13 16:15:33.895727 [INFO/SCORING] gtx-worker: model=GeForce GTX 1070, dynamic=0.9841, static=0.0731, final=0.2682 (capWeight=0.50)
+2026/05/13 16:15:33.895728 [INFO/SCORING] Selected node: rtx-master (score=0.4452)
+2026/05/13 16:15:33.895730 [INFO] Selected node: rtx-master | Pod: default/face-detect-00013-deployment-c6476c579-283bc02e
+2026/05/13 16:15:33.895738 [INFO] Patch completed for face-detect-00013-deployment-c6476c579-283bc02e pod with affinity for rtx-master node
+
+2026/05/13 16:15:38.100842 [INFO] Webhook call: Operation=CREATE Namespace=default Name=plate-detect-00019-deployment-f5fdf5f6d-e8f3b58e
+2026/05/13 16:15:38.201634 [INFO/PLACEMENT] Service=plate-detect replicas-per-node=map[gtx-worker:0 rtx-master:0] min=0 candidates=[rtx-master gtx-worker]
+2026/05/13 16:15:38.202388 [INFO/METRICS] rtx-master: GPU=0.0% | VRAM_FREE=15834 MB | MODEL=NVIDIA GeForce RTX 4060 Ti
+2026/05/13 16:15:38.202394 [INFO/METRICS] gtx-worker: GPU=0.0% | VRAM_FREE=7931 MB | MODEL=NVIDIA GeForce GTX 1070
+2026/05/13 16:15:38.202398 [INFO/SCORING] rtx-master: model=GeForce RTX 4060 Ti 16 GB, dynamic=0.9832, static=0.2016, final=0.4452 (capWeight=0.50)
+2026/05/13 16:15:38.202400 [INFO/SCORING] gtx-worker: model=GeForce GTX 1070, dynamic=0.9841, static=0.0731, final=0.2682 (capWeight=0.50)
+2026/05/13 16:15:38.202402 [INFO/SCORING] Selected node: rtx-master (score=0.4452)
+2026/05/13 16:15:38.202403 [INFO] Selected node: rtx-master | Pod: default/plate-detect-00019-deployment-f5fdf5f6d-e8f3b58e
+2026/05/13 16:15:38.202415 [INFO] Patch completed for plate-detect-00019-deployment-f5fdf5f6d-e8f3b58e pod with affinity for rtx-master node
+
+2026/05/13 16:15:39.317270 [INFO] Webhook call: Operation=CREATE Namespace=default Name=face-detect-00013-deployment-c6476c579-3362e734
+2026/05/13 16:15:39.319950 [INFO/PLACEMENT] Service=face-detect replicas-per-node=map[gtx-worker:0 rtx-master:1] min=0 candidates=[gtx-worker]
+2026/05/13 16:15:39.319996 [INFO/PLACEMENT] Selected node by load distribution: gtx-worker (replicas=0)
+2026/05/13 16:15:39.320003 [INFO] Selected node: gtx-worker | Pod: default/face-detect-00013-deployment-c6476c579-3362e734
+2026/05/13 16:15:39.320127 [INFO] Patch completed for face-detect-00013-deployment-c6476c579-3362e734 pod with affinity for gtx-worker node
+
+2026/05/13 16:15:49.317244 [INFO] Webhook call: Operation=CREATE Namespace=default Name=face-detect-00013-deployment-c6476c579-23184e92
+2026/05/13 16:15:49.320549 [INFO/PLACEMENT] Service=face-detect replicas-per-node=map[gtx-worker:1 rtx-master:1] min=1 candidates=[rtx-master gtx-worker]
+2026/05/13 16:15:49.321945 [INFO/METRICS] rtx-master: GPU=23.7% | VRAM_FREE=14250 MB | MODEL=NVIDIA GeForce RTX 4060 Ti
+2026/05/13 16:15:49.321954 [INFO/METRICS] gtx-worker: GPU=0.0% | VRAM_FREE=7931 MB | MODEL=NVIDIA GeForce GTX 1070
+2026/05/13 16:15:49.321957 [INFO/SCORING] rtx-master: model=GeForce RTX 4060 Ti 16 GB, dynamic=0.8165, static=0.2016, final=0.4057 (capWeight=0.50)
+2026/05/13 16:15:49.321960 [INFO/SCORING] gtx-worker: model=GeForce GTX 1070, dynamic=0.9841, static=0.0731, final=0.2682 (capWeight=0.50)
+2026/05/13 16:15:49.321961 [INFO/SCORING] Selected node: rtx-master (score=0.4057)
+2026/05/13 16:15:49.321962 [INFO] Selected node: rtx-master | Pod: default/face-detect-00013-deployment-c6476c579-23184e92
+2026/05/13 16:15:49.321973 [INFO] Patch completed for face-detect-00013-deployment-c6476c579-23184e92 pod with affinity for rtx-master node
+
+2026/05/13 16:15:49.328221 [INFO] Webhook call: Operation=CREATE Namespace=default Name=face-detect-00013-deployment-c6476c579-791258b3
+2026/05/13 16:15:49.330815 [INFO/PLACEMENT] Service=face-detect replicas-per-node=map[gtx-worker:1 rtx-master:2] min=1 candidates=[gtx-worker]
+2026/05/13 16:15:49.330828 [INFO/PLACEMENT] Selected node by load distribution: gtx-worker (replicas=1)
+2026/05/13 16:15:49.330829 [INFO] Selected node: gtx-worker | Pod: default/face-detect-00013-deployment-c6476c579-791258b3
+2026/05/13 16:15:49.330839 [INFO] Patch completed for face-detect-00013-deployment-c6476c579-791258b3 pod with affinity for gtx-worker node
+
+2026/05/13 16:16:05.915889 [INFO] Webhook call: Operation=CREATE Namespace=default Name=plate-detect-00019-deployment-f5fdf5f6d-4c066656
+2026/05/13 16:16:05.918794 [INFO/PLACEMENT] Service=plate-detect replicas-per-node=map[gtx-worker:0 rtx-master:1] min=0 candidates=[gtx-worker]
+2026/05/13 16:16:05.918806 [INFO/PLACEMENT] Selected node by load distribution: gtx-worker (replicas=0)
+2026/05/13 16:16:05.918808 [INFO] Selected node: gtx-worker | Pod: default/plate-detect-00019-deployment-f5fdf5f6d-4c066656
+2026/05/13 16:16:05.918817 [INFO] Patch completed for plate-detect-00019-deployment-f5fdf5f6d-4c066656 pod with affinity for gtx-worker node
