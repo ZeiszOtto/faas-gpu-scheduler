@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -13,6 +14,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 )
+
+// schedulerMutex serializes the decision phase of concurrent webhook calls.
+var schedulerMutex sync.Mutex
 
 type PatchOperation struct {
 	Op    string      `json:"op"`
@@ -78,7 +82,9 @@ func handleMutate(cfg *Config, gpuDB *GPUDatabase, nodeGPUMap map[string]string,
 		serviceName := extractServiceName(&pod)
 
 		// Node selection
+		schedulerMutex.Lock()
 		selectedNode, err := selectNode(cfg, gpuDB, nodeGPUMap, k8sClient, serviceName)
+		schedulerMutex.Unlock()
 		if err != nil {
 			log.Printf("[ERROR] Unsuccessful node selection: %s — pod allowed without patching", err)
 			sendResponse(w, req.UID, true, "Node selection error [fallback]", nil)
